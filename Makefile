@@ -4,7 +4,7 @@ all: build
 
 build:
 	cd cmd;\
-	go build -vet all -o ../capi;
+	go build -o ../capi;
 
 test:
 	go test ./... -vet all

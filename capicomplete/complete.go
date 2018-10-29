@@ -29,7 +29,7 @@ func GenerateResponse(ac *autocomplete.Params, p *capi.Profile) []string {
 				if api.Alias == "" {
 					all = append(all, api.Name)
 				} else {
-					all = append(all, fmt.Sprintf("(%s) %s", api.Alias, api.Name))
+					all = append(all, fmt.Sprintf("%s (%s)", api.Name, api.Alias))
 				}
 			}
 		}
@@ -39,6 +39,5 @@ func GenerateResponse(ac *autocomplete.Params, p *capi.Profile) []string {
 			break
 		}
 	}
-
 	return all
 }
