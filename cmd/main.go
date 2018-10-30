@@ -24,6 +24,20 @@ func main() {
 	if autoComplete(profile) {
 		return
 	}
+
+	api, err := profile.SelectAPI(os.Args)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+		return
+	}
+	cmd, err := profile.SelectCommand(api, os.Args)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+		return
+	}
+	fmt.Printf("%s :: %s\n\t%s\n", api.Name, cmd.Name, cmd.Path)
 	//api, err := whichApi(os.Args[1:])
 	//if err != nil {
 	//	fmt.Fprintf(os.Stderr, "FATAL: %v\n", err)
