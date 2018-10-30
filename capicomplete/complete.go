@@ -1,7 +1,6 @@
 package capicomplete
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/NearlyUnique/capi"
@@ -12,8 +11,7 @@ func GenerateResponse(ac *autocomplete.Params, p *capi.Profile) []string {
 	var all []string
 	single := []string{""}
 	hasPrefix := func(api capi.API) bool {
-		return strings.HasPrefix(api.Name, ac.Word) ||
-			strings.HasPrefix(api.Alias, ac.Word)
+		return strings.HasPrefix(api.Name, ac.Word)
 	}
 	alwaysInclude := func(api capi.API) bool { return true }
 
@@ -25,12 +23,7 @@ func GenerateResponse(ac *autocomplete.Params, p *capi.Profile) []string {
 				if len(single[0]) == 0 {
 					single[0] = api.Name
 				}
-				// store
-				if api.Alias == "" {
-					all = append(all, api.Name)
-				} else {
-					all = append(all, fmt.Sprintf("%s (%s)", api.Name, api.Alias))
-				}
+				all = append(all, api.Name)
 			}
 		}
 		if len(all) == 1 {

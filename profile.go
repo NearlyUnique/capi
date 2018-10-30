@@ -10,14 +10,13 @@ import (
 )
 
 type (
-	apiMap  map[string]API
+	//apiMap  map[string]API
 	Profile struct {
 		EnvPrefix string `json:"envPrefix"`
 		APIs      []API  `json:"apis"`
 	}
 	API struct {
 		Name     string            `json:"name"`
-		Alias    string            `json:"alias"`
 		BaseURL  map[string]string `json:"baseURL"` // per environment (key)
 		Commands []Command         `json:"commands"`
 	}
@@ -38,10 +37,10 @@ func (cmd Command) CurlString(baseURL string) string {
 	return fmt.Sprintf("# %s\ncurl -X %s %s%s", cmd.Name, cmd.Method, baseURL, cmd.Path)
 }
 
-var (
-	apis       apiMap
-	privateEnv map[string]string
-)
+//var (
+//	apis       apiMap
+//	privateEnv map[string]string
+//)
 
 // LoadAPI from a basic config json file
 func LoadAPI(r io.ReadCloser) (*Profile, error) {

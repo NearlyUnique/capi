@@ -36,15 +36,14 @@ func Test_when_loaded_the_profile_contains_apis(t *testing.T) {
 func Test_an_api_can_be_selected_by_name(t *testing.T) {
 	p := capi.Profile{
 		APIs: []capi.API{
-			{Name: "first", Alias: "one"},
-			{Name: "second", Alias: "two"},
+			{Name: "first"},
+			{Name: "second"},
 		},
 	}
 	t.Run("when name matches exactly", func(t *testing.T) {
 		actual, err := p.SelectAPI([]string{"cmd-name", "second"})
 		assert.NoError(t, err)
 		assert.Equal(t, "second", actual.Name)
-		assert.Equal(t, "two", actual.Alias)
 	})
 	t.Run("returns an error if not found", func(t *testing.T) {
 		actual, err := p.SelectAPI([]string{"cmd-name", "unknown"})
@@ -62,13 +61,13 @@ func Test_an_api_can_be_selected_by_name(t *testing.T) {
 func Test_a_command_can_be_selected_by_name(t *testing.T) {
 	p := capi.Profile{
 		APIs: []capi.API{
-			{Name: "first", Alias: "one",
+			{Name: "first",
 				Commands: []capi.Command{
 					{Name: "cmd1", Path: "/one"},
 					{Name: "cmd1", Path: "/two"},
 				},
 			},
-			{Name: "second", Alias: "two"},
+			{Name: "second"},
 		},
 	}
 	api, err := p.SelectAPI([]string{"cmd", "first"})
