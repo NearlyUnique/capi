@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -25,6 +27,11 @@ type (
 		Path   string   `json:"path"`
 		Header []string `json:"header"`
 	}
+)
+
+const (
+	argIndexAPI     = 1
+	argIndexCommand = 2
 )
 
 func (cmd Command) CurlString(baseURL string) string {
@@ -48,4 +55,35 @@ func LoadAPI(r io.ReadCloser) (*Profile, error) {
 		return nil, err
 	}
 	return &profile, err
+}
+
+// SelectAPI selects based on the os.Args
+func (p *Profile) SelectAPI(args []string) (*API, error) {
+	if len(args) <= argIndexAPI {
+		return nil, errors.New("not enough arguments")
+	}
+	apiName := args[argIndexAPI]
+	for _, a := range p.APIs {
+		if apiName == a.Name {
+			return &a, nil
+		}
+	}
+	return nil, errors.Errorf("no api named %s registered", apiName)
+}
+
+//SelectCommand from an API
+func (p *Profile) SelectCommand(api *API, args []string) (*Command, error) {
+	if api == nil {
+		return nil, errors.New("nil api")
+	}
+	if len(args) <= argIndexCommand {
+		return nil, errors.New("not enough arguments")
+	}
+	cmdName := args[argIndexCommand]
+	for _, c := range api.Commands {
+		if cmdName == c.Name {
+			return &c, nil
+		}
+	}
+	return nil, errors.Errorf("no command named %s registered", cmdName)
 }

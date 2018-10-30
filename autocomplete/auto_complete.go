@@ -1,6 +1,7 @@
 package autocomplete
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -97,4 +98,9 @@ func log(format string, args ...interface{}) {
 	if LogHook != nil {
 		LogHook(format, args...)
 	}
+}
+
+func (p Params) String() string {
+	return fmt.Sprintf("Command=%v,Word=%v,PrevWord=%v,Line=%v,Point=%v,Key=%v,Type=%v",
+		p.Command, p.Word, p.PrevWord, p.Line, p.Point, p.Key, p.Type)
 }

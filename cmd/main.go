@@ -2,41 +2,28 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
 
-	"github.com/NearlyUnique/capi/capicomplete"
-
 	"github.com/NearlyUnique/capi"
 	"github.com/NearlyUnique/capi/autocomplete"
+	"github.com/NearlyUnique/capi/capicomplete"
+	"github.com/pkg/errors"
 )
 
 func main() {
 	printVersion(os.Args)
-	profilePath := "./profile.json"
-	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
-		profilePath = os.Getenv("CAPI_PROFILE")
-	}
-	if profilePath == "" {
-		fmt.Fprintln(os.Stderr, "./profile.json does not exist and ENV var CAPI_PROFILE not set")
-		os.Exit(1)
-	}
-	f, err := os.Open(profilePath)
+	profile, err := loadProfile()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "can't open profile %s\n", profilePath)
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-	profile, err := capi.LoadAPI(f)
-
-	ac := autocomplete.Prepare(os.Args, os.Environ())
-	if ac != nil {
-		comp := capicomplete.GenerateResponse(ac, profile)
-		fmt.Print(strings.Join(comp, "\n"))
+	if autoComplete(profile) {
 		return
 	}
-
 	//api, err := whichApi(os.Args[1:])
 	//if err != nil {
 	//	fmt.Fprintf(os.Stderr, "FATAL: %v\n", err)
@@ -64,6 +51,44 @@ func main() {
 	//	fmt.Fprintf(os.Stderr, "FATAL:%v\n", err)
 	//	os.Exit(1)
 	//}
+}
+func loadProfile() (*capi.Profile, error) {
+	profilePath := "./profile.json"
+	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
+		profilePath = os.Getenv("CAPI_PROFILE")
+	}
+	if profilePath == "" {
+		return nil, errors.New("./profile.json does not exist and ENV var CAPI_PROFILE not set")
+	}
+	f, err := os.Open(profilePath)
+	if err != nil {
+		return nil, errors.WithMessage(err, fmt.Sprintf("can't open profile %s\n", profilePath))
+	}
+	return capi.LoadAPI(f)
+}
+
+func autoComplete(profile *capi.Profile) bool {
+	autocomplete.LogHook = logFn
+	ac := autocomplete.Prepare(os.Args, os.Environ())
+	if ac != nil {
+		logFn("%v", ac)
+		comp := capicomplete.GenerateResponse(ac, profile)
+		fmt.Print(strings.Join(comp, "\n"))
+		return true
+	}
+	return false
+}
+
+func logFn(format string, args ...interface{}) {
+	logfile, err := os.OpenFile("complete.log", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0600)
+	if err == nil {
+		defer logfile.Close()
+
+		log.SetOutput(logfile)
+		log.Printf(format, args...)
+	} else {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
 }
 
 var rxMustacheParams = regexp.MustCompile(`{(?P<Name>[a-zA-Z0-9-_]+)}`)
