@@ -17,11 +17,10 @@ func Test_when_loaded_the_profile_contains_apis(t *testing.T) {
 	"envPrefix": "a_prefix",
     "apis": [{
       "name": "a-name",
-      "alias": "name",
       "baseUrl": {"env1": "http://localhost:8080", "env2": "https://example.com/root_path"},
       "commands": [ {
           "name": "a-name", "method": "GET", "path": "/some/path",
-          "header": [ "any-header" ]
+          "header": { "any-header":"" }
         } ]
 	} ]
 }`)

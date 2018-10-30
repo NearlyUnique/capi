@@ -12,19 +12,21 @@ import (
 type (
 	//apiMap  map[string]API
 	Profile struct {
-		EnvPrefix string `json:"envPrefix"`
-		APIs      []API  `json:"apis"`
+		EnvPrefix string            `json:"envPrefix"`
+		Default   map[string]string `json:"default"`
+		APIs      []API             `json:"apis"`
 	}
 	API struct {
-		Name     string            `json:"name"`
-		BaseURL  map[string]string `json:"baseURL"` // per environment (key)
-		Commands []Command         `json:"commands"`
+		Name          string            `json:"name"`
+		BaseURL       map[string]string `json:"baseURL"` // per environment (key)
+		DefaultHeader map[string]string `json:"header"`
+		Commands      []Command         `json:"commands"`
 	}
 	Command struct {
-		Name   string   `json:"name"`
-		Method string   `json:"method"`
-		Path   string   `json:"path"`
-		Header []string `json:"header"`
+		Name   string            `json:"name"`
+		Method string            `json:"method"`
+		Path   string            `json:"path"`
+		Header map[string]string `json:"header"`
 	}
 )
 
