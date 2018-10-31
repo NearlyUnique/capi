@@ -10,6 +10,6 @@ test:
 	go test ./... -vet all
 
 install:
-	complete -C ./capi capi
+	echo complete -C ./capi capi
 
 
