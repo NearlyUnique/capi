@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"regexp"
 
 	"github.com/pkg/errors"
 )
@@ -37,6 +38,37 @@ const (
 
 func (cmd Command) CurlString(baseURL string) string {
 	return fmt.Sprintf("# %s\ncurl -X %s %s%s", cmd.Name, cmd.Method, baseURL, cmd.Path)
+}
+
+var rxMustacheParams = regexp.MustCompile(`{(?P<Name>[a-zA-Z0-9-_]+)}`)
+
+func (cmd Command) ListParams() []string {
+	var params []string
+	set := map[string]string{}
+	add := func(v string) {
+		if _, ok := set[v]; ok {
+			return
+		}
+		set[v] = v
+		params = append(params, v)
+
+	}
+	//from url
+	match := rxMustacheParams.FindAllStringSubmatch(cmd.Path, -1)
+	for _, m := range match {
+		add(m[1])
+	}
+	// header
+	for k, v := range cmd.Header {
+		// keys
+		add(k)
+		//values
+		match := rxMustacheParams.FindAllStringSubmatch(v, -1)
+		for _, m := range match {
+			add(m[1])
+		}
+	}
+	return params
 }
 
 //var (

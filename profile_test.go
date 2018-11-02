@@ -96,3 +96,101 @@ func Test_a_command_can_be_selected_by_name(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func Test_list_params_for_a_command(t *testing.T) {
+	//p := capi.Profile{
+	//	EnvPrefix: "ANY_",
+	//	Default: map[string]string{
+	//		"empty_default_header":      "",
+	//		"literal_default_header":    "a_literal",
+	//		"single_arg_default_header": "{an_arg}",
+	//	},
+	//	APIs: []capi.API{
+	//		{
+	//			Name: "an_api",
+	//			BaseURL: map[string]string{
+	//				"env1": "http://1.example.com",
+	//				"env2": "http://2.example.com",
+	//			},
+	//			Commands: []capi.Command{
+	//				{
+	//					Name: "cmd1",
+	//					Path: "/{arg1}/literal/{arg2}",
+	//					Header: map[string]string{
+	//						"empty_header":      "",
+	//						"literal_header":    "a_literal",
+	//						"single_arg_header": "{an_arg}",
+	//					},
+	//				},
+	//			},
+	//		},
+	//	},
+	//}
+	//_ = p
+
+	t.Run("params for a command include path variables", func(t *testing.T) {
+		cmd := capi.Command{Path: "/{arg1}/literal/{arg2}"}
+
+		actual := cmd.ListParams()
+
+		assert.Contains(t, actual, "arg1")
+		assert.Contains(t, actual, "arg2")
+		assert.Equal(t, 2, len(actual))
+	})
+	t.Run("params for a command include header keys", func(t *testing.T) {
+		cmd := capi.Command{
+			Header: map[string]string{
+				"header1":           "",
+				"underscore_header": "",
+				"dash-header":       "",
+			},
+		}
+
+		actual := cmd.ListParams()
+
+		assert.Contains(t, actual, "header1")
+		assert.Contains(t, actual, "underscore_header")
+		assert.Contains(t, actual, "dash-header")
+		assert.Equal(t, 3, len(actual))
+	})
+	t.Run("params for a command include header values", func(t *testing.T) {
+		cmd := capi.Command{
+			Header: map[string]string{
+				"h0": "",
+				"h1": "{arg1}",
+				"h2": "prefix {arg2}",
+				"h3": "surround {arg3} with",
+			},
+		}
+
+		actual := cmd.ListParams()
+
+		// unavoidable header keys
+		assert.Contains(t, actual, "h0")
+		assert.Contains(t, actual, "h1")
+		assert.Contains(t, actual, "h2")
+		assert.Contains(t, actual, "h3")
+		//values
+		assert.Contains(t, actual, "arg1")
+		assert.Contains(t, actual, "arg2")
+		assert.Contains(t, actual, "arg2")
+		assert.Equal(t, 7, len(actual))
+	})
+	t.Run("params will only appear once even it duplicated in definitions", func(t *testing.T) {
+		cmd := capi.Command{
+			Path: "/{duplicate}/any/{path1}",
+			Header: map[string]string{
+				"header1":   "{duplicate}",
+				"duplicate": "",
+			},
+		}
+
+		actual := cmd.ListParams()
+
+		assert.Contains(t, actual, "header1")
+		assert.Contains(t, actual, "path1")
+		assert.Contains(t, actual, "duplicate")
+		assert.Equal(t, 3, len(actual))
+	})
+
+}
