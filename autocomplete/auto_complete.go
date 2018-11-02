@@ -37,15 +37,20 @@ const (
 
 //PrepareAutoComplete expects full arg list (from os.Args) and all environment variables (from os.Environ())
 func Prepare(args []string, envRaw []string) *Params {
+	const (
+		indexCommand  = 1
+		indexWord     = 2
+		indexPrevWord = 3
+	)
 	env := sliceToMap(envRaw)
 	var ac Params
 	if len(args) != 4 {
 		log("expected 4 args, got %v", args)
 		return nil
 	}
-	ac.Command = args[1]
-	ac.Word = args[2]
-	ac.PrevWord = args[3]
+	ac.Command = args[indexCommand]
+	ac.Word = args[indexWord]
+	ac.PrevWord = args[indexPrevWord]
 	var ok bool
 	//"COMP_LINE", "COMP_TYPE", "COMP_KEY", "COMP_POINT"
 	if ac.Line, ok = env["COMP_LINE"]; !ok {
@@ -82,6 +87,16 @@ func Prepare(args []string, envRaw []string) *Params {
 	return &ac
 }
 
+//WordIndex for the word under the cursor
+func (p *Params) WordIndex() int {
+	return logicalPosition(p.Line, p.Point)
+}
+
+// Args as would be specified by os.Args
+func (p *Params) Args() []string {
+	return strings.Split(p.Line, " ")
+}
+
 func sliceToMap(envRaw []string) map[string]string {
 	env := make(map[string]string)
 	for _, e := range envRaw {
@@ -89,6 +104,19 @@ func sliceToMap(envRaw []string) map[string]string {
 		env[e[:ci]] = e[ci+1:]
 	}
 	return env
+}
+
+func logicalPosition(line string, pos int) int {
+	if pos > len(line) {
+		return -1
+	}
+	p := 0
+	for i := 0; i < pos; i++ {
+		if line[i] == ' ' {
+			p++
+		}
+	}
+	return p
 }
 
 // LogHook allows callers to intercept the process
