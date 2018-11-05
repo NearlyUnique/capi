@@ -12,4 +12,8 @@ test:
 install:
 	echo complete -C ./capi capi
 
+tail:
+	rm -f complete.log
+	touch complete.log
+	tail complete.log -f
 

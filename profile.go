@@ -2,6 +2,7 @@ package capi
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -119,4 +120,14 @@ func (p *Profile) SelectCommand(api *API, args []string) (*Command, error) {
 		}
 	}
 	return nil, errors.Errorf("no command named %s registered", cmdName)
+}
+
+func CreateFlagset(cmd Command) *flag.FlagSet {
+	fs := flag.NewFlagSet(cmd.Name, flag.ContinueOnError)
+
+	for _, p := range cmd.ListParams() {
+		fs.String(p, "", "")
+	}
+
+	return fs
 }

@@ -38,6 +38,7 @@ func main() {
 		return
 	}
 	fmt.Printf("%s :: %s\n\t%s\n", api.Name, cmd.Name, cmd.Path)
+	fmt.Printf("\targs:\n\t%s\n", strings.Join(cmd.ListParams(), "\n"))
 	//api, err := whichApi(os.Args[1:])
 	//if err != nil {
 	//	fmt.Fprintf(os.Stderr, "FATAL: %v\n", err)

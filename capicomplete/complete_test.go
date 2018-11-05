@@ -51,16 +51,43 @@ func Test_searching_for_command_within_api(t *testing.T) {
 			},
 		},
 	}}
-	ac := autocomplete.Params{
-		Line: "app-name bbb c",
-		//     0123456789 123
-		Point:    13,
-		Word:     "c",
-		PrevWord: "bbb",
-		Type:     9,
-		Key:      "9",
-	}
+	ac := autocomplete.Mock("app-name bbb c", "")
 	options := capicomplete.GenerateResponse(&ac, &p)
 
 	assert.Contains(t, options, "cmd1")
+}
+func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
+	p := capi.Profile{APIs: []capi.API{
+		{Name: "an_api",
+			Commands: []capi.Command{
+				{Name: "a_cmd", Path: "/one/{first_arg}", Header: map[string]string{"header1": "any", "header2": "{second_arg}"}},
+			},
+		},
+	}}
+
+	t.Run("with no user filter", func(t *testing.T) {
+		ac := autocomplete.Mock("any an_api a_cmd ", "")
+
+		actual := capicomplete.GenerateResponse(&ac, &p)
+
+		assert.Contains(t, actual, "--first_arg")
+		assert.Contains(t, actual, "--second_arg")
+		assert.Contains(t, actual, "--header1")
+		assert.Contains(t, actual, "--header2")
+	})
+	t.Run("with ambiguous user filter", func(t *testing.T) {
+		ac := autocomplete.Mock("any an_api a_cmd --head", "")
+
+		actual := capicomplete.GenerateResponse(&ac, &p)
+
+		assert.Contains(t, actual, "--header1")
+		assert.Contains(t, actual, "--header2")
+	})
+	t.Run("user filter that can only fit one result returns single flag", func(t *testing.T) {
+		ac := autocomplete.Mock("any an_api a_cmd --first", "")
+
+		actual := capicomplete.GenerateResponse(&ac, &p)
+
+		assert.Contains(t, actual, "--first_arg")
+	})
 }

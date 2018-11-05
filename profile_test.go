@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/NearlyUnique/capi/autocomplete"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/NearlyUnique/capi"
@@ -193,4 +195,22 @@ func Test_list_params_for_a_command(t *testing.T) {
 		assert.Equal(t, 3, len(actual))
 	})
 
+}
+
+func Test_flagset_is_created_from_param_list(t *testing.T) {
+	cmd := capi.Command{
+		Path: "/{arg1}/any/{arg2}",
+		Header: map[string]string{
+			"header1": "{arg3}",
+			"header2": "",
+		},
+	}
+	ac := autocomplete.Mock("any an_api a_cmd --header1 some:value -arg1 value1", "")
+	fs := capi.CreateFlagset(cmd)
+
+	err := ac.Parse(fs)
+
+	require.NoError(t, err)
+	require.NotNil(t, fs.Lookup("arg1"))
+	assert.Equal(t, "value1", fs.Lookup("arg1").Value.String())
 }

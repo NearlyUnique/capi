@@ -50,6 +50,23 @@ func GenerateResponse(ac *autocomplete.Params, p *capi.Profile) []string {
 		if len(filtered) == 0 {
 			filtered = all
 		}
+	default:
+		// must be looking for args
+		api, err := p.SelectAPI(ac.Args())
+		if err != nil {
+			return []string{"no such api", err.Error()}
+		}
+		cmd, err := p.SelectCommand(api, ac.Args())
+		if err != nil {
+			return []string{"no such command", err.Error()}
+		}
+
+		for _, param := range cmd.ListParams() {
+			dashed := "--" + param
+			if strings.HasPrefix(dashed, ac.Word) {
+				filtered = append(filtered, dashed)
+			}
+		}
 	}
 
 	return filtered
