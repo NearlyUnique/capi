@@ -2,13 +2,13 @@ package capi
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"regexp"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/pflag"
 )
 
 type (
@@ -61,12 +61,14 @@ func (cmd Command) ListParams() []string {
 	}
 	// header
 	for k, v := range cmd.Header {
-		// keys
-		add(k)
 		//values
 		match := rxMustacheParams.FindAllStringSubmatch(v, -1)
 		for _, m := range match {
 			add(m[1])
+		}
+		// keys, only if no values inside
+		if len(match) == 0 {
+			add(k)
 		}
 	}
 	return params
@@ -122,8 +124,8 @@ func (p *Profile) SelectCommand(api *API, args []string) (*Command, error) {
 	return nil, errors.Errorf("no command named %s registered", cmdName)
 }
 
-func CreateFlagset(cmd Command) *flag.FlagSet {
-	fs := flag.NewFlagSet(cmd.Name, flag.ContinueOnError)
+func CreateFlagset(cmd Command) *pflag.FlagSet {
+	fs := pflag.NewFlagSet(cmd.Name, pflag.ContinueOnError)
 
 	for _, p := range cmd.ListParams() {
 		fs.String(p, "", "")

@@ -1,10 +1,11 @@
 package autocomplete
 
 import (
-	"flag"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/pflag"
 
 	"github.com/pkg/errors"
 )
@@ -101,7 +102,7 @@ func (p *Params) Args() []string {
 }
 
 // Parse as would be specified by os.Args
-func (p *Params) Parse(fs *flag.FlagSet) error {
+func (p *Params) Parse(fs *pflag.FlagSet) error {
 	args := p.Args()
 	if len(args) < 3 {
 		return errors.New("nothing to parse")

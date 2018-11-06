@@ -60,7 +60,7 @@ func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
 	p := capi.Profile{APIs: []capi.API{
 		{Name: "an_api",
 			Commands: []capi.Command{
-				{Name: "a_cmd", Path: "/one/{first_arg}", Header: map[string]string{"header1": "any", "header2": "{second_arg}"}},
+				{Name: "a_cmd", Path: "/one/{first_arg}", Header: map[string]string{"header1": "any", "header2": "any"}},
 			},
 		},
 	}}
@@ -71,7 +71,6 @@ func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
 		actual := capicomplete.GenerateResponse(&ac, &p)
 
 		assert.Contains(t, actual, "--first_arg")
-		assert.Contains(t, actual, "--second_arg")
 		assert.Contains(t, actual, "--header1")
 		assert.Contains(t, actual, "--header2")
 	})
@@ -89,5 +88,32 @@ func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
 		actual := capicomplete.GenerateResponse(&ac, &p)
 
 		assert.Contains(t, actual, "--first_arg")
+	})
+}
+
+func Test_header_special_case(t *testing.T) {
+	p := capi.Profile{APIs: []capi.API{{
+		Name: "an_api",
+		Commands: []capi.Command{{
+			Name: "a_cmd",
+			Path: "/",
+			Header: map[string]string{
+				"header1": "any",
+				"header2": "{second_arg}",
+			},
+		}},
+	}},
+	}
+
+	t.Run("when value in header contains arg, the header is not treated as a filter", func(t *testing.T) {
+		ac := autocomplete.Mock("any an_api a_cmd ", "")
+
+		actual := capicomplete.GenerateResponse(&ac, &p)
+
+		assert.Equal(t, 2, len(actual))
+
+		assert.NotContains(t, actual, "--header2")
+		assert.Contains(t, actual, "--second_arg")
+		assert.Contains(t, actual, "--header1")
 	})
 }

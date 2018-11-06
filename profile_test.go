@@ -169,14 +169,11 @@ func Test_list_params_for_a_command(t *testing.T) {
 
 		// unavoidable header keys
 		assert.Contains(t, actual, "h0")
-		assert.Contains(t, actual, "h1")
-		assert.Contains(t, actual, "h2")
-		assert.Contains(t, actual, "h3")
 		//values
 		assert.Contains(t, actual, "arg1")
 		assert.Contains(t, actual, "arg2")
 		assert.Contains(t, actual, "arg2")
-		assert.Equal(t, 7, len(actual))
+		assert.Equal(t, 4, len(actual))
 	})
 	t.Run("params will only appear once even it duplicated in definitions", func(t *testing.T) {
 		cmd := capi.Command{
@@ -189,10 +186,9 @@ func Test_list_params_for_a_command(t *testing.T) {
 
 		actual := cmd.ListParams()
 
-		assert.Contains(t, actual, "header1")
 		assert.Contains(t, actual, "path1")
 		assert.Contains(t, actual, "duplicate")
-		assert.Equal(t, 3, len(actual))
+		assert.Equal(t, 2, len(actual))
 	})
 
 }
@@ -205,7 +201,7 @@ func Test_flagset_is_created_from_param_list(t *testing.T) {
 			"header2": "",
 		},
 	}
-	ac := autocomplete.Mock("any an_api a_cmd --header1 some:value -arg1 value1", "")
+	ac := autocomplete.Mock("any an_api a_cmd --header2 some:value --arg1 value1", "")
 	fs := capi.CreateFlagset(cmd)
 
 	err := ac.Parse(fs)
