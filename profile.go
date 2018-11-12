@@ -5,30 +5,32 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"regexp"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 )
 
 type (
-	//apiMap  map[string]API
 	Profile struct {
-		EnvPrefix string            `json:"envPrefix"`
-		Default   map[string]string `json:"default"`
-		APIs      []API             `json:"apis"`
+		EnvPrefix string `json:"envPrefix"`
+		APIs      []API  `json:"apis"`
 	}
 	API struct {
 		Name          string            `json:"name"`
-		BaseURL       map[string]string `json:"baseURL"` // per environment (key)
+		BaseURL       string            `json:"baseURL"` // per environment (key)
 		DefaultHeader map[string]string `json:"header"`
 		Commands      []Command         `json:"commands"`
 	}
 	Command struct {
-		Name   string            `json:"name"`
-		Method string            `json:"method"`
-		Path   string            `json:"path"`
-		Header map[string]string `json:"header"`
+		Name          string            `json:"name"`
+		Method        string            `json:"method"`
+		Path          string            `json:"path"`
+		Header        map[string]string `json:"header"`
+		ExcludeHeader []string          `json:"excludeHeader"`
+		Data          json.RawMessage   `json:"data"`
 	}
 )
 
@@ -124,12 +126,41 @@ func (p *Profile) SelectCommand(api *API, args []string) (*Command, error) {
 	return nil, errors.Errorf("no command named %s registered", cmdName)
 }
 
-func CreateFlagset(cmd Command) *pflag.FlagSet {
+//CreateFlaSet create a flag set and apply any default values
+func (cmd *Command) CreateFlagSet(eval func(string) string) *pflag.FlagSet {
 	fs := pflag.NewFlagSet(cmd.Name, pflag.ContinueOnError)
-
+	if eval == nil {
+		eval = func(string) string { return "" }
+	}
 	for _, p := range cmd.ListParams() {
-		fs.String(p, "", "")
+		fs.String(p, eval(p), "")
 	}
 
 	return fs
+}
+
+var envCache = make(map[string]string)
+var EnvPrefix = ""
+
+//Lookup a value from the environment
+func Lookup(key string) string {
+	if len(envCache) == 0 {
+		for _, v := range os.Environ() {
+			i := strings.Index(v, "=")
+			if i == -1 {
+				continue
+			}
+			envCache[strings.ToUpper(v[:i])] = v[i+1:]
+		}
+	}
+	kup := strings.ToUpper(key)
+
+	if v, ok := envCache[EnvPrefix+kup]; ok {
+		return v
+	}
+	if v, ok := envCache[kup]; ok {
+		return v
+	}
+
+	return ""
 }

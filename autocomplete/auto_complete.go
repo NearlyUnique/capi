@@ -39,7 +39,7 @@ const (
 	TypeNone = 0
 )
 
-//PrepareAutoComplete expects full arg list (from os.Args) and all environment variables (from os.Environ())
+//Prepare expects full arg list (from os.Args) and all environment variables (from os.Environ())
 func Prepare(args []string, envRaw []string) *Params {
 	const (
 		indexCommand  = 1

@@ -3,6 +3,7 @@ package capi_test
 import (
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -19,7 +20,7 @@ func Test_when_loaded_the_profile_contains_apis(t *testing.T) {
 	"envPrefix": "a_prefix",
     "apis": [{
       "name": "a-name",
-      "baseUrl": {"env1": "http://localhost:8080", "env2": "https://example.com/root_path"},
+      "baseUrl": "https://example.com/root_path",
       "commands": [ {
           "name": "a-name", "method": "GET", "path": "/some/path",
           "header": { "any-header":"" }
@@ -31,7 +32,7 @@ func Test_when_loaded_the_profile_contains_apis(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "a_prefix", p.EnvPrefix)
-	assert.Equal(t, "https://example.com/root_path", p.APIs[0].BaseURL["env2"])
+	assert.Equal(t, "https://example.com/root_path", p.APIs[0].BaseURL)
 }
 
 func Test_an_api_can_be_selected_by_name(t *testing.T) {
@@ -202,11 +203,55 @@ func Test_flagset_is_created_from_param_list(t *testing.T) {
 		},
 	}
 	ac := autocomplete.Mock("any an_api a_cmd --header2 some:value --arg1 value1", "")
-	fs := capi.CreateFlagset(cmd)
 
-	err := ac.Parse(fs)
+	t.Run("a nil function results in default value being empty string", func(t *testing.T) {
+		fs := cmd.CreateFlagSet(nil)
 
-	require.NoError(t, err)
-	require.NotNil(t, fs.Lookup("arg1"))
-	assert.Equal(t, "value1", fs.Lookup("arg1").Value.String())
+		err := ac.Parse(fs)
+
+		require.NoError(t, err)
+		assert.Equal(t, "value1", fs.Lookup("arg1").Value.String())
+		assert.Equal(t, "", fs.Lookup("arg3").Value.String())
+	})
+	t.Run("a function can be supplied to lookup result", func(t *testing.T) {
+		fn := func(id string) string { return "looked-up-value" }
+		fs := cmd.CreateFlagSet(fn)
+
+		err := ac.Parse(fs)
+
+		require.NoError(t, err)
+		assert.Equal(t, "looked-up-value", fs.Lookup("arg3").Value.String())
+	})
+}
+
+func Test_lookup_value_by_name(t *testing.T) {
+	os.Setenv("SOME_ENV_VAR_KEY", "a value")
+	os.Setenv("XXX_VALUE_DEFINED_WITH_PREFIX", "another value")
+
+	os.Setenv("xxx_prefix_has_precedence", "user prefix has precedence")
+	os.Setenv("prefix_has_precedence", "this is never found")
+
+	testData := []struct {
+		name, key, expected string
+	}{
+		{"key as defined", "SOME_ENV_VAR_KEY", "a value"},
+		{"lower case", "some_env_var_key", "a value"},
+		{"mixed case", "SOME_env_var_key", "a value"},
+
+		{"with prefix", "VALUE_DEFINED_WITH_PREFIX", "another value"},
+
+		{"unknown env variable", "unknown_env_variable", ""},
+
+		{"user prefix has precedence", "prefix_has_precedence", "user prefix has precedence"},
+	}
+
+	capi.EnvPrefix = "XXX_"
+
+	for _, td := range testData {
+		t.Run(td.name, func(t *testing.T) {
+			value := capi.Lookup(td.key)
+
+			assert.Equal(t, td.expected, value)
+		})
+	}
 }

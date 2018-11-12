@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/spf13/pflag"
 
 	"github.com/NearlyUnique/capi"
 	"github.com/NearlyUnique/capi/autocomplete"
@@ -37,30 +40,17 @@ func main() {
 		os.Exit(1)
 		return
 	}
+
+	fs := cmd.CreateFlagSet(capi.Lookup)
+	fs.Parse(os.Args[2:])
+
 	fmt.Printf("%s :: %s\n\t%s\n", api.Name, cmd.Name, cmd.Path)
-	fmt.Printf("\targs:\n\t%s\n", strings.Join(cmd.ListParams(), "\n"))
-	//api, err := whichApi(os.Args[1:])
-	//if err != nil {
-	//	fmt.Fprintf(os.Stderr, "FATAL: %v\n", err)
-	//	os.Exit(1)
-	//}
-	//cmd, err := api.whichCmd(os.Args[2:])
-	//
-	//paramNames := extractParams(api, cmd)
-	//values := make(map[string]*string)
-	//
-	//fs := flag.NewFlagSet(api.Alias, flag.ContinueOnError)
-	//for _, p := range paramNames {
-	//	values[p] = fs.String(p, "no description", "optional value")
-	//}
-	//
-	//// 0        1        2        3
-	//// this-app api-Name cmd-Name firstarg
-	//fs.Parse(os.Args[3:])
-	//fmt.Println(fs.Parsed())
-	//
-	//h := applyParams(api, cmd, values)
-	//
+	fmt.Print("\targs:\n")
+
+	fs.VisitAll(func(flag *pflag.Flag) {
+		fmt.Printf("\t%s : %v\n", flag.Name, flag.Value)
+	})
+
 	//err = httpRequest(api, cmd, h)
 	//if err != nil {
 	//	fmt.Fprintf(os.Stderr, "FATAL:%v\n", err)
@@ -108,75 +98,31 @@ func logFn(format string, args ...interface{}) {
 
 var rxMustacheParams = regexp.MustCompile(`{(?P<Name>[a-zA-Z0-9-_]+)}`)
 
-func applyParams(api *capi.API, cmd *capi.Command, values map[string]*string) http.Header {
-
-	//// from url
-	//cmd.Path = rxMustacheParams.ReplaceAllStringFunc(cmd.Path, func(s string) string {
-	//	k := s[1 : len(s)-1]
-	//	v, ok := values[k]
-	//	if ok && *v != "" {
-	//		return *v
-	//	}
-	//	return s
-	//})
-	//// from host
-	//host := api.BaseURL[config("env", "dev")]
-	//_ = rxMustacheParams.ReplaceAllStringFunc(host, func(s string) string {
-	//	return s + "###"
-	//})
-
-	// from headers
-	h := make(http.Header)
-	//for _, p := range cmd.Header {
-	//	if v, ok := values[p]; ok {
-	//		h.Set(p, *v)
-	//	}
-	//}
-	return h
-}
-func extractParams(api *capi.API, cmd *capi.Command) []string {
-	var params []string
-	// from url
-	//match := rxMustacheParams.FindAllStringSubmatch(cmd.Path, -1)
-	//for _, m := range match {
-	//	params = append(params, m[1])
-	//}
-	//// from host
-	//match = rxMustacheParams.FindAllStringSubmatch(api.BaseURL[config("env", "dev")], -1)
-	//for _, m := range match {
-	//	params = append(params, m[1])
-	//}
-	//
-	//// from headers
-	//params = append(params, cmd.Header...)
-
-	return params
-}
 func httpRequest(api *capi.API, cmd *capi.Command, header http.Header) error {
-	//c := http.Client{}
-	//req, err := http.NewRequest(cmd.Method, api.BaseURL(cmd), nil)
-	//if err != nil {
-	//	return err
-	//}
-	//req.Header = header
-	//
-	//resp, err := c.Do(req)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//defer resp.Body.Close()
-	//
-	//for k, v := range resp.Header {
-	//	for _, h := range v {
-	//		fmt.Printf("%v: %v\n", k, h)
-	//	}
-	//}
-	//
-	//_, err = io.Copy(os.Stdout, resp.Body)
-	//if err != nil {
-	//	return err
-	//}
+	c := http.Client{}
+	req, err := http.NewRequest(cmd.Method, "", nil) //api.BaseURL(cmd), nil)
+	if err != nil {
+		return err
+	}
+	req.Header = header
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	for k, v := range resp.Header {
+		for _, h := range v {
+			fmt.Printf("%v: %v\n", k, h)
+		}
+	}
+
+	_, err = io.Copy(os.Stdout, resp.Body)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -197,38 +143,6 @@ func httpRequest(api *capi.API, cmd *capi.Command, header http.Header) error {
 //		return v
 //	}
 //	return def
-//}
-
-//func (a *API) whichCmd(args []string) (*Command, error) {
-//	if len(args) < 1 {
-//		return nil, errors.Errorf("no cmd selected")
-//	}
-//	c, ok := a.Commands[args[0]]
-//	if !ok {
-//		return nil, errors.Errorf("no api named %s registered", args)
-//	}
-//	return c, nil
-//
-//}
-//func whichApi(args []string) (*API, error) {
-//	if len(args) < 1 {
-//		return nil, errors.Errorf("no api selected")
-//	}
-//	a, ok := apis[args[0]]
-//	if !ok {
-//		return nil, errors.Errorf("no api named %s registered", args)
-//	}
-//	return &a, nil
-//}
-
-//func init() {
-//	for _, pair := range os.Environ() {
-//		s := strings.Split(pair, "=")
-//		key := strings.ToLower(s[0])
-//		if strings.HasPrefix(key, "crv_") {
-//			privateEnv[key[:4]] = s[1]
-//		}
-//	}
 //}
 
 var version = "0.0"
