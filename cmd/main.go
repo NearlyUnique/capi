@@ -5,11 +5,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"regexp"
 	"strings"
-
-	"github.com/spf13/pflag"
 
 	"github.com/NearlyUnique/capi"
 	"github.com/NearlyUnique/capi/autocomplete"
@@ -28,35 +27,29 @@ func main() {
 		return
 	}
 
-	api, err := profile.SelectAPI(os.Args)
+	cmd, err := capi.Prepare(*profile, os.Args)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
-		return
 	}
-	cmd, err := profile.SelectCommand(api, os.Args)
+	req, err := capi.CreateRequest(cmd)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
-		return
 	}
+	b, _ := httputil.DumpRequest(req, true)
+	fmt.Println(string(b))
 
-	fs := cmd.CreateFlagSet(capi.Lookup)
-	fs.Parse(os.Args[2:])
-
-	fmt.Printf("%s :: %s\n\t%s\n", api.Name, cmd.Name, cmd.Path)
-	fmt.Print("\targs:\n")
-
-	fs.VisitAll(func(flag *pflag.Flag) {
-		fmt.Printf("\t%s : %v\n", flag.Name, flag.Value)
-	})
-
-	//err = httpRequest(api, cmd, h)
-	//if err != nil {
-	//	fmt.Fprintf(os.Stderr, "FATAL:%v\n", err)
-	//	os.Exit(1)
-	//}
+	c := http.Client{}
+	resp, err := c.Do(req)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+	b, _ = httputil.DumpResponse(resp, true)
+	fmt.Println(string(b))
 }
+
 func loadProfile() (*capi.Profile, error) {
 	profilePath := "./profile.json"
 	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
@@ -126,24 +119,6 @@ func httpRequest(api *capi.API, cmd *capi.Command, header http.Header) error {
 
 	return nil
 }
-
-//func (a *capi.API) url(cmd *capi.Command) string {
-//	env := config("env", "dev")
-//	baseURL, ok := a.BaseURL[env]
-//	if !ok {
-//		fmt.Fprintf(os.Stderr, "configured environment %s not found", env)
-//		os.Exit(1)
-//	}
-//	u, _ := url.Parse(baseURL)
-//	u.Path = path.Join(u.Path, cmd.Path)
-//	return u.String()
-//}
-//func config(key, def string) string {
-//	if v, ok := privateEnv[key]; ok {
-//		return v
-//	}
-//	return def
-//}
 
 var version = "0.0"
 

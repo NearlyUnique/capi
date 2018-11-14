@@ -3,7 +3,6 @@ package capi_test
 import (
 	"io"
 	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 
@@ -101,36 +100,6 @@ func Test_a_command_can_be_selected_by_name(t *testing.T) {
 }
 
 func Test_list_params_for_a_command(t *testing.T) {
-	//p := capi.Profile{
-	//	EnvPrefix: "ANY_",
-	//	Default: map[string]string{
-	//		"empty_default_header":      "",
-	//		"literal_default_header":    "a_literal",
-	//		"single_arg_default_header": "{an_arg}",
-	//	},
-	//	APIs: []capi.API{
-	//		{
-	//			Name: "an_api",
-	//			BaseURL: map[string]string{
-	//				"env1": "http://1.example.com",
-	//				"env2": "http://2.example.com",
-	//			},
-	//			Commands: []capi.Command{
-	//				{
-	//					Name: "cmd1",
-	//					Path: "/{arg1}/literal/{arg2}",
-	//					Header: map[string]string{
-	//						"empty_header":      "",
-	//						"literal_header":    "a_literal",
-	//						"single_arg_header": "{an_arg}",
-	//					},
-	//				},
-	//			},
-	//		},
-	//	},
-	//}
-	//_ = p
-
 	t.Run("params for a command include path variables", func(t *testing.T) {
 		cmd := capi.Command{Path: "/{arg1}/literal/{arg2}"}
 
@@ -225,11 +194,17 @@ func Test_flagset_is_created_from_param_list(t *testing.T) {
 }
 
 func Test_lookup_value_by_name(t *testing.T) {
-	os.Setenv("SOME_ENV_VAR_KEY", "a value")
-	os.Setenv("XXX_VALUE_DEFINED_WITH_PREFIX", "another value")
-
-	os.Setenv("xxx_prefix_has_precedence", "user prefix has precedence")
-	os.Setenv("prefix_has_precedence", "this is never found")
+	local := capi.LocalEnv{
+		EnvPrefix: "XXX_",
+		Environ: func() []string {
+			return []string{
+				"SOME_ENV_VAR_KEY=a value",
+				"XXX_VALUE_DEFINED_WITH_PREFIX=another value",
+				"xxx_prefix_has_precedence=user prefix has precedence",
+				"prefix_has_precedence=this is never found",
+			}
+		},
+	}
 
 	testData := []struct {
 		name, key, expected string
@@ -245,11 +220,10 @@ func Test_lookup_value_by_name(t *testing.T) {
 		{"user prefix has precedence", "prefix_has_precedence", "user prefix has precedence"},
 	}
 
-	capi.EnvPrefix = "XXX_"
-
 	for _, td := range testData {
 		t.Run(td.name, func(t *testing.T) {
-			value := capi.Lookup(td.key)
+
+			value := local.Lookup(td.key)
 
 			assert.Equal(t, td.expected, value)
 		})

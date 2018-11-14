@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"regexp"
 	"strings"
 
@@ -20,9 +19,11 @@ type (
 	}
 	API struct {
 		Name          string            `json:"name"`
-		BaseURL       string            `json:"baseURL"` // per environment (key)
+		BaseURL       string            `json:"baseURL"`
 		DefaultHeader map[string]string `json:"header"`
 		Commands      []Command         `json:"commands"`
+
+		profile *Profile
 	}
 	Command struct {
 		Name          string            `json:"name"`
@@ -31,6 +32,9 @@ type (
 		Header        map[string]string `json:"header"`
 		ExcludeHeader []string          `json:"excludeHeader"`
 		Data          json.RawMessage   `json:"data"`
+
+		fs  *pflag.FlagSet
+		api *API
 	}
 )
 
@@ -76,11 +80,6 @@ func (cmd Command) ListParams() []string {
 	return params
 }
 
-//var (
-//	apis       apiMap
-//	privateEnv map[string]string
-//)
-
 // LoadAPI from a basic config json file
 func LoadAPI(r io.ReadCloser) (*Profile, error) {
 	buf, err := ioutil.ReadAll(r)
@@ -103,6 +102,7 @@ func (p *Profile) SelectAPI(args []string) (*API, error) {
 	apiName := args[argIndexAPI]
 	for _, a := range p.APIs {
 		if apiName == a.Name {
+			a.profile = p
 			return &a, nil
 		}
 	}
@@ -120,6 +120,7 @@ func (p *Profile) SelectCommand(api *API, args []string) (*Command, error) {
 	cmdName := args[argIndexCommand]
 	for _, c := range api.Commands {
 		if cmdName == c.Name {
+			c.api = api
 			return &c, nil
 		}
 	}
@@ -139,26 +140,30 @@ func (cmd *Command) CreateFlagSet(eval func(string) string) *pflag.FlagSet {
 	return fs
 }
 
-var envCache = make(map[string]string)
-var EnvPrefix = ""
+type LocalEnv struct {
+	EnvPrefix string
+	Environ   func() []string
+	envCache  map[string]string
+}
 
 //Lookup a value from the environment
-func Lookup(key string) string {
-	if len(envCache) == 0 {
-		for _, v := range os.Environ() {
+func (e *LocalEnv) Lookup(key string) string {
+	if len(e.envCache) == 0 {
+		e.envCache = make(map[string]string)
+		for _, v := range e.Environ() {
 			i := strings.Index(v, "=")
 			if i == -1 {
 				continue
 			}
-			envCache[strings.ToUpper(v[:i])] = v[i+1:]
+			e.envCache[strings.ToUpper(v[:i])] = v[i+1:]
 		}
 	}
 	kup := strings.ToUpper(key)
 
-	if v, ok := envCache[EnvPrefix+kup]; ok {
+	if v, ok := e.envCache[e.EnvPrefix+kup]; ok {
 		return v
 	}
-	if v, ok := envCache[kup]; ok {
+	if v, ok := e.envCache[kup]; ok {
 		return v
 	}
 
