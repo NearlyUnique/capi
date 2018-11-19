@@ -2,7 +2,7 @@
 
 all: build
 
-build:
+build: test
 	cd cmd;\
 	go build -o ../capi;
 
