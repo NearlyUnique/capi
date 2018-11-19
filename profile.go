@@ -33,8 +33,8 @@ type (
 		ExcludeHeader []string          `json:"excludeHeader"`
 		Data          json.RawMessage   `json:"data"`
 
-		fs  *pflag.FlagSet
-		api *API
+		api  *API
+		args map[string]string
 	}
 )
 
@@ -45,39 +45,6 @@ const (
 
 func (cmd Command) CurlString(baseURL string) string {
 	return fmt.Sprintf("# %s\ncurl -X %s %s%s", cmd.Name, cmd.Method, baseURL, cmd.Path)
-}
-
-var rxMustacheParams = regexp.MustCompile(`{(?P<Name>[a-zA-Z0-9-_]+)}`)
-
-func (cmd Command) ListParams() []string {
-	var params []string
-	set := map[string]string{}
-	add := func(v string) {
-		if _, ok := set[v]; ok {
-			return
-		}
-		set[v] = v
-		params = append(params, v)
-
-	}
-	//from url
-	match := rxMustacheParams.FindAllStringSubmatch(cmd.Path, -1)
-	for _, m := range match {
-		add(m[1])
-	}
-	// header
-	for k, v := range cmd.Header {
-		//values
-		match := rxMustacheParams.FindAllStringSubmatch(v, -1)
-		for _, m := range match {
-			add(m[1])
-		}
-		// keys, only if no values inside
-		if len(match) == 0 {
-			add(k)
-		}
-	}
-	return params
 }
 
 // LoadAPI from a basic config json file
@@ -120,15 +87,71 @@ func (p *Profile) SelectCommand(api *API, args []string) (*Command, error) {
 	cmdName := args[argIndexCommand]
 	for _, c := range api.Commands {
 		if cmdName == c.Name {
-			c.api = api
+			api.Add(&c)
 			return &c, nil
 		}
 	}
 	return nil, errors.Errorf("no command named %s registered", cmdName)
 }
 
-//CreateFlaSet create a flag set and apply any default values
-func (cmd *Command) CreateFlagSet(eval func(string) string) *pflag.FlagSet {
+//Add a cmd to the api
+func (api *API) Add(cmd *Command) {
+	if cmd.api == api {
+		return
+	}
+	cmd.api = api
+	for _, c := range api.Commands {
+		if c.Method == cmd.Method && c.Path == cmd.Path {
+			return
+		}
+	}
+
+	api.Commands = append(api.Commands, *cmd)
+}
+
+var rxMustacheParams = regexp.MustCompile(`{(?P<Name>[a-zA-Z0-9-_]+)}`)
+
+func (cmd Command) ListParams() []string {
+	var params []string
+	set := map[string]string{}
+	add := func(v string) {
+		if _, ok := set[v]; ok {
+			return
+		}
+		set[v] = v
+		params = append(params, v)
+
+	}
+	addMap := func(header map[string]string) {
+		for k, v := range header {
+			//values
+			match := rxMustacheParams.FindAllStringSubmatch(v, -1)
+			for _, m := range match {
+				add(m[1])
+			}
+			// keys, only if no values inside
+			if len(match) == 0 {
+				add(k)
+			}
+		}
+	}
+	//from url
+	match := rxMustacheParams.FindAllStringSubmatch(cmd.Path, -1)
+	for _, m := range match {
+		add(m[1])
+	}
+	// header
+	addMap(cmd.Header)
+	// from default headers
+	if cmd.api != nil {
+		addMap(cmd.api.DefaultHeader)
+	}
+	return params
+}
+
+// TODO: should there be any defaults?
+// ParseArgs from the command line adding any defaults from env vars and profile
+func (cmd *Command) ParseArgs(args []string, eval func(string) string) (map[string]string, error) {
 	fs := pflag.NewFlagSet(cmd.Name, pflag.ContinueOnError)
 	if eval == nil {
 		eval = func(string) string { return "" }
@@ -137,7 +160,15 @@ func (cmd *Command) CreateFlagSet(eval func(string) string) *pflag.FlagSet {
 		fs.String(p, eval(p), "")
 	}
 
-	return fs
+	err := fs.Parse(args[2:])
+	if err != nil {
+		return nil, err
+	}
+	m := make(map[string]string)
+	fs.VisitAll(func(flag *pflag.Flag) {
+		m[flag.Name] = flag.Value.String()
+	})
+	return m, nil
 }
 
 type LocalEnv struct {

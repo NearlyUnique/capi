@@ -1,8 +1,6 @@
 package capi_test
 
 import (
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,6 +16,11 @@ func Test_http_request_can_be_made(t *testing.T) {
 			{
 				Name:    "an_api",
 				BaseURL: "https://postman-echo.com",
+				DefaultHeader: map[string]string{
+					"any-default-header":  "default value",
+					"default-header-key":  "before {any-arg} after",
+					"overwritten-default": "-overwrite-this-",
+				},
 				Commands: []capi.Command{
 					{
 						Name:   "api_cmd",
@@ -29,19 +32,15 @@ func Test_http_request_can_be_made(t *testing.T) {
 					}, {
 						Name: "api_cmd_args",
 						Path: "/sub/{v1}/path/{v2}",
+						Header: map[string]string{
+							"command-header-key":  "{any-arg}",
+							"overwritten-default": "overwritten: {any-arg}",
+						},
 					},
 				},
 			},
 		},
 	}
-	var actualRequest http.Request
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		actualRequest = *r
-		w.WriteHeader(http.StatusTeapot)
-	}))
-
-	p.APIs[0].BaseURL = ts.URL
 
 	args := []string{"cli_cmd", "an_api", "api_cmd"}
 	cmd, err := capi.Prepare(p, args)
@@ -54,15 +53,9 @@ func Test_http_request_can_be_made(t *testing.T) {
 	t.Run("a request can be sent", func(t *testing.T) {
 		req, err := capi.CreateRequest(cmd)
 		assert.NoError(t, err)
-
-		resp, err := ts.Client().Do(req)
-		assert.NoError(t, err)
-		require.NotNil(t, resp)
-
-		assert.Equal(t, "/post", actualRequest.URL.String())
-		assert.Equal(t, "POST", actualRequest.Method)
-		assert.Contains(t, "application/json", actualRequest.Header.Get("Content-Type"))
-		assert.Equal(t, http.StatusTeapot, resp.StatusCode)
+		assert.Equal(t, "/post", req.URL.Path)
+		assert.Equal(t, "POST", req.Method)
+		assert.Equal(t, "application/json", req.Header.Get("Content-Type"))
 	})
 	t.Run("literal url profile generates the same url", func(t *testing.T) {
 		req, err := capi.CreateRequest(cmd)
@@ -81,5 +74,16 @@ func Test_http_request_can_be_made(t *testing.T) {
 		assert.Equal(t, "/sub/first/path/second", req.URL.Path)
 
 	})
+	t.Run("headers with value expansion are added", func(t *testing.T) {
+		args := []string{"cli_cmd", "an_api", "api_cmd_args", "--any-arg", "value1"}
+		cmd, err := capi.Prepare(p, args)
+		require.NoError(t, err)
 
+		req, err := capi.CreateRequest(cmd)
+		require.NoError(t, err)
+
+		assert.Equal(t, "value1", req.Header.Get("command-header-key"))
+		assert.Equal(t, "before value1 after", req.Header.Get("default-header-key"))
+		assert.Equal(t, "overwritten: value1", req.Header.Get("overwritten-default"))
+	})
 }

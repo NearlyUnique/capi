@@ -5,8 +5,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-
-	"github.com/spf13/pflag"
 )
 
 //Prepare a command for given cli args
@@ -24,8 +22,15 @@ func Prepare(profile Profile, args []string) (*Command, error) {
 		Environ:   os.Environ,
 	}
 
-	cmd.fs = cmd.CreateFlagSet(local.Lookup)
-	err = cmd.fs.Parse(args[2:])
+	cmd.args, err = cmd.ParseArgs(args, local.Lookup)
+	if err != nil {
+		return nil, err
+	}
+	//err = fs.Parse(args[2:])
+	//m := make(map[string]string)
+	//cmd.fs.VisitAll(func(flag *pflag.Flag) {
+	//	m[flag.Name] = flag.Value.String()
+	//})
 
 	if err != nil {
 		return nil, err
@@ -35,17 +40,17 @@ func Prepare(profile Profile, args []string) (*Command, error) {
 
 //CreateRequest for sending, printing, debugging, etc.
 func CreateRequest(cmd *Command) (*http.Request, error) {
-	m := make(map[string]string)
-	cmd.fs.VisitAll(func(flag *pflag.Flag) {
-		m[flag.Name] = flag.Value.String()
-	})
+	replace := func(src string) string {
+		return rxMustacheParams.ReplaceAllStringFunc(src, func(s string) string {
+			// s includes the '{' and '}'
+			if v, ok := cmd.args[s[1:len(s)-1]]; ok {
+				return v
+			}
+			return s
+		})
+	}
 
-	tempPath := rxMustacheParams.ReplaceAllStringFunc(cmd.Path, func(s string) string {
-		if v, ok := m[s[1:len(s)-1]]; ok {
-			return v
-		}
-		return s
-	})
+	tempPath := replace(cmd.Path)
 
 	urlPath := makeURL(cmd.api.BaseURL, tempPath)
 
@@ -53,7 +58,17 @@ func CreateRequest(cmd *Command) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-	//req.Header
+
+	for k, v := range cmd.api.DefaultHeader {
+		v = replace(v)
+		req.Header.Set(k, v)
+	}
+
+	for k, v := range cmd.Header {
+		v = replace(v)
+		req.Header.Set(k, v)
+	}
+
 	return req, nil
 }
 

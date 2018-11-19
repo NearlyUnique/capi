@@ -6,8 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NearlyUnique/capi/autocomplete"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/NearlyUnique/capi"
@@ -160,37 +158,29 @@ func Test_list_params_for_a_command(t *testing.T) {
 		assert.Contains(t, actual, "duplicate")
 		assert.Equal(t, 2, len(actual))
 	})
+	t.Run("params are read from default headers", func(t *testing.T) {
+		api := capi.API{
+			DefaultHeader: map[string]string{
+				"from-default":       "",
+				"default-with-param": "{default-param}",
+			},
+		}
+		cmd := capi.Command{
+			Path: "/any",
+			Header: map[string]string{
+				"cmd-header": "",
+			},
+		}
+		api.Add(&cmd)
 
-}
+		actual := cmd.ListParams()
 
-func Test_flagset_is_created_from_param_list(t *testing.T) {
-	cmd := capi.Command{
-		Path: "/{arg1}/any/{arg2}",
-		Header: map[string]string{
-			"header1": "{arg3}",
-			"header2": "",
-		},
-	}
-	ac := autocomplete.Mock("any an_api a_cmd --header2 some:value --arg1 value1", "")
-
-	t.Run("a nil function results in default value being empty string", func(t *testing.T) {
-		fs := cmd.CreateFlagSet(nil)
-
-		err := ac.Parse(fs)
-
-		require.NoError(t, err)
-		assert.Equal(t, "value1", fs.Lookup("arg1").Value.String())
-		assert.Equal(t, "", fs.Lookup("arg3").Value.String())
+		assert.Contains(t, actual, "cmd-header")
+		assert.Contains(t, actual, "from-default")
+		assert.Contains(t, actual, "default-param")
+		assert.Equal(t, 3, len(actual))
 	})
-	t.Run("a function can be supplied to lookup result", func(t *testing.T) {
-		fn := func(id string) string { return "looked-up-value" }
-		fs := cmd.CreateFlagSet(fn)
 
-		err := ac.Parse(fs)
-
-		require.NoError(t, err)
-		assert.Equal(t, "looked-up-value", fs.Lookup("arg3").Value.String())
-	})
 }
 
 func Test_lookup_value_by_name(t *testing.T) {
