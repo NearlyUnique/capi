@@ -74,6 +74,8 @@ func CreateRequest(cmd *Command) (*http.Request, error) {
 
 func makeURL(baseURL, pathSegment string) string {
 	u, _ := url.Parse(baseURL)
-	u.Path = path.Join(u.Path, pathSegment)
+	ps, _ := url.Parse(pathSegment)
+	u.Path = path.Join(u.Path, ps.Path)
+	u.RawQuery = ps.Query().Encode()
 	return u.String()
 }
