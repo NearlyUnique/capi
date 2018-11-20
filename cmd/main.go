@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"regexp"
 	"strings"
@@ -37,8 +37,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-	b, _ := httputil.DumpRequest(req, true)
-	fmt.Println(string(b))
+	// make json if --capi-mode = request or all
+	//b, _ := httputil.DumpRequest(req, true)
+	//fmt.Println(string(b))
 
 	c := http.Client{}
 	resp, err := c.Do(req)
@@ -46,8 +47,18 @@ func main() {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-	b, _ = httputil.DumpResponse(resp, true)
-	fmt.Println(string(b))
+	// make json if --capi-mode = response or all
+	//b, _ = httputil.DumpResponse(resp, true)
+	//fmt.Println(string(b))
+	if resp.Body != nil {
+		defer resp.Body.Close()
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+		fmt.Print(string(b))
+	}
 }
 
 func loadProfile() (*capi.Profile, error) {

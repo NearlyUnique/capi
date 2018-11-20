@@ -1,7 +1,9 @@
 .idea
 
-profile.json
+.env
 complete.log
 cover.*
 
 capi
+
+Run

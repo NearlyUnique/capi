@@ -52,7 +52,10 @@ func CreateRequest(cmd *Command) (*http.Request, error) {
 
 	tempPath := replace(cmd.Path)
 
-	urlPath := makeURL(cmd.api.BaseURL, tempPath)
+	urlPath, err := makeURL(cmd.api.BaseURL, tempPath)
+	if err != nil {
+		return nil, err
+	}
 
 	req, err := http.NewRequest(cmd.Method, urlPath, nil)
 	if err != nil {
@@ -72,10 +75,16 @@ func CreateRequest(cmd *Command) (*http.Request, error) {
 	return req, nil
 }
 
-func makeURL(baseURL, pathSegment string) string {
-	u, _ := url.Parse(baseURL)
-	ps, _ := url.Parse(pathSegment)
+func makeURL(baseURL, pathSegment string) (string, error) {
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return "", err
+	}
+	ps, err := url.Parse(pathSegment)
+	if err != nil {
+		return "", err
+	}
 	u.Path = path.Join(u.Path, ps.Path)
 	u.RawQuery = ps.Query().Encode()
-	return u.String()
+	return u.String(), nil
 }

@@ -20,18 +20,17 @@ type (
 	API struct {
 		Name          string            `json:"name"`
 		BaseURL       string            `json:"baseURL"`
-		DefaultHeader map[string]string `json:"header"`
+		DefaultHeader map[string]string `json:"defaultHeader"`
 		Commands      []Command         `json:"commands"`
 
 		profile *Profile
 	}
 	Command struct {
-		Name          string            `json:"name"`
-		Method        string            `json:"method"`
-		Path          string            `json:"path"`
-		Header        map[string]string `json:"header"`
-		ExcludeHeader []string          `json:"excludeHeader"`
-		Data          json.RawMessage   `json:"data"`
+		Name   string            `json:"name"`
+		Method string            `json:"method"`
+		Path   string            `json:"path"`
+		Header map[string]string `json:"header"`
+		Data   json.RawMessage   `json:"data"`
 
 		api  *API
 		args map[string]string
