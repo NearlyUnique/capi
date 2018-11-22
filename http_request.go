@@ -1,6 +1,8 @@
 package capi
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -56,8 +58,12 @@ func CreateRequest(cmd *Command) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+	var r io.Reader
+	if cmd.Data != nil {
+		r = bytes.NewReader(cmd.Data)
+	}
 
-	req, err := http.NewRequest(cmd.Method, urlPath, nil)
+	req, err := http.NewRequest(cmd.Method, urlPath, r)
 	if err != nil {
 		return nil, err
 	}

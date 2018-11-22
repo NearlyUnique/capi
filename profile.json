@@ -2,59 +2,88 @@
   "envPrefix": "capi_",
   "apis": [
     {
-      "name":"httpbin",
-      "baseUrl":"https://httpbin.org",
-      "defaultHeader":{
-        "accept":"application/json",
-        "user-agent":"capi v/0.0"
+      "name": "httpbin",
+      "baseUrl": "https://httpbin.org",
+      "defaultHeader": {
+        "accept": "application/json",
+        "user-agent": "capi v/0.0"
       },
-      "commands":[
+      "commands": [
         {
-          "name":"get-any",
-          "path":"/anything/{value}"
+          "name": "get-any",
+          "path": "/anything/{value}"
+        },
+        {
+          "name": "post-any",
+          "path": "/anything",
+          "data": {
+            "any_string": "{arg1}",
+            "number": 7,
+            "list": [
+              10,
+              "eleven",
+              {
+                "complex": true,
+                "sub_value": "{arg2}"
+              }
+            ]
+          }
         }
       ]
-    },{
-      "name":"ipstack",
-      "baseUrl":"http://api.ipstack.com/",
-      "defaultHeader":{
-        "accept":"application/json",
-        "user-agent":"capi v/0.0"
+    },
+    {
+      "name": "ipstack",
+      "baseUrl": "http://api.ipstack.com/",
+      "defaultHeader": {
+        "accept": "application/json",
+        "user-agent": "capi v/0.0"
       },
-      "commands":[
+      "commands": [
         {
-          "name":"geo-location",
-          "path":"/check?access_key={ipstack_token}"
+          "name": "geo-location",
+          "path": "/check?access_key={ipstack_token}"
         }
       ]
-    },{
-      "name":"weather",
-      "baseUrl":"https://api.openweathermap.org/data/2.5",
-      "defaultHeader":{
-        "accept":"application/json",
-        "user-agent":"capi v/0.0"
+    },
+    {
+      "name": "weather",
+      "baseUrl": "https://api.openweathermap.org/data/2.5",
+      "defaultHeader": {
+        "accept": "application/json",
+        "user-agent": "capi v/0.0"
       },
-      "defaultQuery":{
-        "apiid":"{owm_token}"
+      "defaultQuery": {
+        "apiid": "{owm_token}"
       },
-      "commands":[
+      "commands": [
         {
-          "name":"location",
-          "path":"/weather?lat={lat}&lon={lon}&APPID={owm_token}"
+          "name": "location",
+          "path": "/weather?lat={lat}&lon={lon}&APPID={owm_token}"
         }
       ]
-    },{
-      "name":"todoist",
-      "baseUrl":"https://beta.todoist.com/API/v8",
-      "defaultHeader":{
-        "authorization":"Bearer {todoist_token}",
-        "accept":"application/json",
-        "user-agent":"capi v/0.0"
+    },
+    {
+      "name": "todoist",
+      "baseUrl": "https://beta.todoist.com/API/v8",
+      "defaultHeader": {
+        "authorization": "Bearer {todoist_token}",
+        "x-request-id": "{reqid}",
+        "content-type": "application/json",
+        "accept": "application/json",
+        "user-agent": "capi v/0.0"
       },
-      "commands":[
+      "commands": [
         {
-          "name":"projects",
-          "path":"/projects"
+          "name": "view-all",
+          "path": "/projects"
+        },
+        {
+          "name": "create",
+          "method": "POST",
+          "path": "/projects",
+          "data": {
+            "name": "{project}"
+          }
         }
       ]
     }

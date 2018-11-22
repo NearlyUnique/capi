@@ -1,8 +1,10 @@
 package capi_test
 
 import (
+	"encoding/json"
 	"io"
 	"io/ioutil"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -218,4 +220,22 @@ func Test_lookup_value_by_name(t *testing.T) {
 			assert.Equal(t, td.expected, value)
 		})
 	}
+}
+
+func Test_data_is_loaded_as_raw_json(t *testing.T) {
+	buf := []byte(`{"name":"cmd_name", "data": { "sk":"{arg}", "ik": 12, "bk": true, "ak":[1] }}`)
+
+	var actual capi.Command
+	err := json.Unmarshal(buf, &actual)
+
+	var rx = regexp.MustCompile(`{(?P<Name>[a-zA-Z0-9-_]+)}`)
+	rx.ReplaceAllFunc(actual.Data, func(buf []byte) []byte {
+		v := string(buf)
+		_ = v
+		return buf
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, "cmd_name", actual.Name)
+	assert.Contains(t, string(actual.Data), `"sk"`)
 }

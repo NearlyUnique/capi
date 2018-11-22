@@ -1,6 +1,9 @@
 package capi_test
 
 import (
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -85,5 +88,38 @@ func Test_http_request_can_be_made(t *testing.T) {
 		assert.Equal(t, "value1", req.Header.Get("command-header-key"))
 		assert.Equal(t, "before value1 after", req.Header.Get("default-header-key"))
 		assert.Equal(t, "overwritten: value1", req.Header.Get("overwritten-default"))
+	})
+	t.Run("for a POST, when data has a value it is sent", func(t *testing.T) {
+		base := p.APIs[0].BaseURL
+		defer func() {
+			p.APIs[0].Commands[0].Data = nil
+			p.APIs[0].BaseURL = base
+		}()
+		// ^^^ fix test, probably better to have separate test data ^^^
+
+		const example = `{"a_key":"a_value"}`
+		var actual []byte
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer r.Body.Close()
+			actual, err = ioutil.ReadAll(r.Body)
+			require.NoError(t, err)
+		}))
+
+		p.APIs[0].Commands[0].Data = []byte(example)
+		p.APIs[0].BaseURL = ts.URL
+
+		args := []string{"cli_cmd", "an_api", "api_cmd"}
+		cmd, err := capi.Prepare(p, args)
+		require.NoError(t, err)
+
+		req, err := capi.CreateRequest(cmd)
+		require.NoError(t, err)
+
+		resp, err := ts.Client().Do(req)
+		require.NoError(t, err)
+		require.Equal(t, resp.StatusCode, http.StatusOK)
+
+		assert.Equal(t, len(actual), len(example))
+		assert.Contains(t, string(actual), `"a_key"`)
 	})
 }

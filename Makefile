@@ -1,4 +1,4 @@
-.PHONY: build test install
+.PHONY: test install cover
 
 all: build
 
@@ -17,3 +17,6 @@ tail:
 	touch complete.log
 	tail complete.log -f
 
+cover:
+	go test ./... -coverprofile=coverage.out
+	go tool cover -html=coverage.out
