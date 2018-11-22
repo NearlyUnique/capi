@@ -145,6 +145,14 @@ func (cmd Command) ListParams() []string {
 	if cmd.api != nil {
 		addMap(cmd.api.DefaultHeader)
 	}
+	//from body
+	if cmd.Data != nil {
+		match = rxMustacheParams.FindAllStringSubmatch(string(cmd.Data), -1)
+		for _, m := range match {
+			add(m[1])
+		}
+	}
+
 	return params
 }
 

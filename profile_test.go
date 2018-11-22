@@ -182,7 +182,18 @@ func Test_list_params_for_a_command(t *testing.T) {
 		assert.Contains(t, actual, "default-param")
 		assert.Equal(t, 3, len(actual))
 	})
+	t.Run("params can come from data", func(t *testing.T) {
+		cmd := capi.Command{
+			Path: "/any",
+			Data: []byte(`{"any":"{v1}","list":["{v2}"]}`),
+		}
 
+		actual := cmd.ListParams()
+
+		assert.Contains(t, actual, "v1")
+		assert.Contains(t, actual, "v2")
+
+	})
 }
 
 func Test_lookup_value_by_name(t *testing.T) {

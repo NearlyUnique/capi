@@ -60,7 +60,13 @@ func CreateRequest(cmd *Command) (*http.Request, error) {
 	}
 	var r io.Reader
 	if cmd.Data != nil {
-		r = bytes.NewReader(cmd.Data)
+		applied := rxMustacheParams.ReplaceAllFunc(cmd.Data, func(b []byte) []byte {
+			if v, ok := cmd.args[string(b[1:len(b)-1])]; ok {
+				return []byte(v)
+			}
+			return b
+		})
+		r = bytes.NewReader(applied)
 	}
 
 	req, err := http.NewRequest(cmd.Method, urlPath, r)

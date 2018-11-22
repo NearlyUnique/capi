@@ -97,7 +97,7 @@ func Test_http_request_can_be_made(t *testing.T) {
 		}()
 		// ^^^ fix test, probably better to have separate test data ^^^
 
-		const example = `{"a_key":"a_value"}`
+		const example = `{"a_key":"a_value","substitute":"{arg1}"}`
 		var actual []byte
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
@@ -108,7 +108,7 @@ func Test_http_request_can_be_made(t *testing.T) {
 		p.APIs[0].Commands[0].Data = []byte(example)
 		p.APIs[0].BaseURL = ts.URL
 
-		args := []string{"cli_cmd", "an_api", "api_cmd"}
+		args := []string{"cli_cmd", "an_api", "api_cmd", "--arg1=value1"}
 		cmd, err := capi.Prepare(p, args)
 		require.NoError(t, err)
 
@@ -121,5 +121,6 @@ func Test_http_request_can_be_made(t *testing.T) {
 
 		assert.Equal(t, len(actual), len(example))
 		assert.Contains(t, string(actual), `"a_key"`)
+		assert.Contains(t, string(actual), `"value1"`)
 	})
 }
