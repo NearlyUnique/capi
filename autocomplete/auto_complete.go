@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -18,6 +20,8 @@ type (
 		Point    int      // COMP_POINT
 		Key      string   // COMP_KEY
 		Type     AutoType // COMP_TYPE
+
+		err error
 	}
 )
 
@@ -35,53 +39,32 @@ const (
 	TypeNone = 0
 )
 
-//Prepare expects full arg list (from os.Args) and all environment variables (from os.Environ())
-func Prepare(args []string, envRaw []string) *Params {
+//Parse expects full arg list (from os.Args) and all environment variables (from os.Environ())
+func Parse(args []string, envRaw []string) *Params {
 	const (
 		indexCommand  = 1
 		indexWord     = 2
 		indexPrevWord = 3
 	)
-	env := sliceToMap(envRaw)
 	var ac Params
 	if len(args) != 4 {
 		log("expected 4 args, got %v", args)
 		return nil
 	}
+	env := sliceToMap(envRaw)
+
 	ac.Command = args[indexCommand]
 	ac.Word = args[indexWord]
 	ac.PrevWord = args[indexPrevWord]
-	var ok bool
-	//"COMP_LINE", "COMP_TYPE", "COMP_KEY", "COMP_POINT"
-	if ac.Line, ok = env["COMP_LINE"]; !ok {
-		log("COMP_LINE missing")
+
+	ac.parseCompLine(env)
+	ac.parseCompKey(env)
+	ac.parseCompType(env)
+	ac.ParseCompPoint(env)
+
+	if ac.err != nil {
+		log(ac.err.Error())
 		return nil
-	}
-	if ac.Key, ok = env["COMP_KEY"]; !ok {
-		log("COMP_KEY missing")
-		return nil
-	}
-	if sint, ok := env["COMP_TYPE"]; !ok {
-		log("COMP_TYPE missing")
-		return nil
-	} else {
-		i, err := strconv.Atoi(sint)
-		if err != nil {
-			log("COMP_TYPE not an integer")
-			return nil
-		}
-		ac.Type = AutoType(i)
-	}
-	if sint, ok := env["COMP_POINT"]; !ok {
-		log("COMP_POINT missing")
-		return nil
-	} else {
-		i, err := strconv.Atoi(sint)
-		if err != nil {
-			log("COMP_POINT not an integer")
-			return nil
-		}
-		ac.Point = i
 	}
 
 	return &ac
@@ -92,8 +75,17 @@ func (p *Params) WordIndex() int {
 	return logicalPosition(p.Line, p.Point)
 }
 
-// Args as would be specified by os.Args
+// Args only the args to the command, not the command itself, use CliArgs for that
 func (p *Params) Args() []string {
+	args := p.CliArgs()
+	if len(args) == 1 {
+		return nil
+	}
+	return args[1:]
+}
+
+// CliArgs as would be specified by os.Args
+func (p *Params) CliArgs() []string {
 	return strings.Split(p.Line, " ")
 }
 
@@ -131,4 +123,61 @@ func log(format string, args ...interface{}) {
 func (p Params) String() string {
 	return fmt.Sprintf("Command=%v,Word=%v,PrevWord=%v,Line=%v,Point=%v,Key=%v,Type=%v",
 		p.Command, p.Word, p.PrevWord, p.Line, p.Point, p.Key, p.Type)
+}
+
+func (p *Params) parseCompLine(env map[string]string) {
+	if p.err != nil {
+		return
+	}
+	var ok bool
+	p.Line, ok = env["COMP_LINE"]
+	if !ok {
+		p.err = errors.New("COMP_LINE missing")
+	}
+}
+
+func (p *Params) parseCompKey(env map[string]string) {
+	if p.err != nil {
+		return
+	}
+	var ok bool
+	p.Key, ok = env["COMP_KEY"]
+	if !ok {
+		p.err = errors.New("COMP_KEY missing")
+	}
+
+}
+
+func (p *Params) parseCompType(env map[string]string) {
+	if p.err != nil {
+		return
+	}
+	temp, ok := env["COMP_TYPE"]
+	if !ok {
+		p.err = errors.New("COMP_TYPE missing")
+		return
+	}
+	i, err := strconv.Atoi(temp)
+	if err != nil {
+		p.err = errors.New("COMP_TYPE not an integer")
+		return
+	}
+	p.Type = AutoType(i)
+}
+
+func (p *Params) ParseCompPoint(env map[string]string) {
+	if p.err != nil {
+		return
+	}
+	temp, ok := env["COMP_POINT"]
+	if !ok {
+		p.err = errors.New("COMP_POINT missing")
+		return
+	}
+
+	i, err := strconv.Atoi(temp)
+	if err != nil {
+		p.err = errors.New("COMP_POINT not an integer")
+	}
+	p.Point = i
 }

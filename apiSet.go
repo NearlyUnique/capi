@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 )
 
 type (
-	Profile struct {
+	APISet struct {
 		EnvPrefix string `json:"envPrefix"`
 		APIs      []API  `json:"apis"`
 	}
@@ -23,7 +24,7 @@ type (
 		DefaultHeader map[string]string `json:"defaultHeader"`
 		Commands      []Command         `json:"commands"`
 
-		profile *Profile
+		apiSet *APISet
 	}
 	Command struct {
 		Name   string            `json:"name"`
@@ -41,18 +42,39 @@ const (
 	argIndexAPI     = 1
 	argIndexCommand = 2
 )
+const (
+	DefaultAPISet = ".apiset"
+)
 
 func (cmd Command) CurlString(baseURL string) string {
 	return fmt.Sprintf("# %s\ncurl -X %s %s%s", cmd.Name, cmd.Method, baseURL, cmd.Path)
 }
 
-// LoadAPI from a basic config json file
-func LoadAPI(r io.ReadCloser) (*Profile, error) {
+// Load a apiSet from a file
+func Load(configPath string) (*APISet, error) {
+	if configPath == "" {
+		return nil, errors.New("no-config-path")
+	}
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		configPath = os.Getenv("CAPI_PROFILE")
+	}
+	if configPath == "" {
+		return nil, errors.Errorf("%s does not exist and ENV var CAPI_PROFILE not set", configPath)
+	}
+	f, err := os.Open(configPath)
+	if err != nil {
+		return nil, errors.WithMessage(err, fmt.Sprintf("can't open profile %s", configPath))
+	}
+	return ParseAPI(f)
+}
+
+// ParseAPI from a basic config json file
+func ParseAPI(r io.ReadCloser) (*APISet, error) {
 	buf, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
-	var profile Profile
+	var profile APISet
 	err = json.Unmarshal(buf, &profile)
 	if err != nil {
 		return nil, err
@@ -60,15 +82,18 @@ func LoadAPI(r io.ReadCloser) (*Profile, error) {
 	return &profile, err
 }
 
+//func (apiSet *APISet) SelectAPI(args []string) (*API, error) {
+//	if len(args) <= argIndexAPI {
+//		return nil, errors.New("not enough arguments")
+//	}
+//	apiName := args[argIndexAPI]
+//	return apiSet.SelectAPI(apiName)
+//}
 // SelectAPI selects based on the os.Args
-func (p *Profile) SelectAPI(args []string) (*API, error) {
-	if len(args) <= argIndexAPI {
-		return nil, errors.New("not enough arguments")
-	}
-	apiName := args[argIndexAPI]
-	for _, a := range p.APIs {
+func (apiSet *APISet) SelectAPI(apiName string) (*API, error) {
+	for _, a := range apiSet.APIs {
 		if apiName == a.Name {
-			a.profile = p
+			a.apiSet = apiSet
 			return &a, nil
 		}
 	}
@@ -76,14 +101,10 @@ func (p *Profile) SelectAPI(args []string) (*API, error) {
 }
 
 //SelectCommand from an API
-func (p *Profile) SelectCommand(api *API, args []string) (*Command, error) {
+func (api *API) SelectCommand(cmdName string) (*Command, error) {
 	if api == nil {
 		return nil, errors.New("nil api")
 	}
-	if len(args) <= argIndexCommand {
-		return nil, errors.New("not enough arguments")
-	}
-	cmdName := args[argIndexCommand]
 	for _, c := range api.Commands {
 		if cmdName == c.Name {
 			api.Add(&c)
@@ -91,7 +112,25 @@ func (p *Profile) SelectCommand(api *API, args []string) (*Command, error) {
 		}
 	}
 	return nil, errors.Errorf("no command named %s registered", cmdName)
+
 }
+
+//func (apiSet *APISet) SelectCommand(api *API, args []string) (*Command, error) {
+//	if api == nil {
+//		return nil, errors.New("nil api")
+//	}
+//	if len(args) <= argIndexCommand {
+//		return nil, errors.New("not enough arguments")
+//	}
+//	cmdName := args[argIndexCommand]
+//	for _, c := range api.Commands {
+//		if cmdName == c.Name {
+//			api.Add(&c)
+//			return &c, nil
+//		}
+//	}
+//	return nil, errors.Errorf("no command named %s registered", cmdName)
+//}
 
 //Add a cmd to the api
 func (api *API) Add(cmd *Command) {
@@ -157,7 +196,7 @@ func (cmd Command) ListParams() []string {
 }
 
 // TODO: should there be any defaults?
-// ParseArgs from the command line adding any defaults from env vars and profile
+// ParseArgs from the command line adding any defaults from env vars and apiSet
 func (cmd *Command) ParseArgs(args []string, eval func(string) string) (map[string]string, error) {
 	fs := pflag.NewFlagSet(cmd.Name, pflag.ContinueOnError)
 	if eval == nil {

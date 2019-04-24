@@ -9,18 +9,25 @@ import (
 	"path"
 )
 
+func indexOrEmpty(args []string, i int) string {
+	if i < 0 || i >= len(args) {
+		return ""
+	}
+	return args[i]
+}
+
 //Prepare a command for given cli args
-func Prepare(profile Profile, args []string) (*Command, error) {
-	api, err := profile.SelectAPI(args)
+func (apiSet APISet) Prepare(args []string) (*Command, error) {
+	api, err := apiSet.SelectAPI(indexOrEmpty(args, 0))
 	if err != nil {
 		return nil, err
 	}
-	cmd, err := profile.SelectCommand(api, args)
+	cmd, err := api.SelectCommand(indexOrEmpty(args, 1))
 	if err != nil {
 		return nil, err
 	}
 	local := LocalEnv{
-		EnvPrefix: profile.EnvPrefix,
+		EnvPrefix: apiSet.EnvPrefix,
 		Environ:   os.Environ,
 	}
 
@@ -34,9 +41,9 @@ func Prepare(profile Profile, args []string) (*Command, error) {
 	//	m[flag.Name] = flag.Value.String()
 	//})
 
-	if err != nil {
-		return nil, err
-	}
+	//if err != nil {
+	//	return nil, err
+	//}
 	return cmd, nil
 }
 

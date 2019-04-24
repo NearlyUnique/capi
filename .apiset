@@ -72,20 +72,20 @@
         "accept": "application/json",
         "user-agent": "capi v/0.0"
       },
-      "commands": [
-        {
-          "name": "view-all",
+      "commands": [{
+          "name": "view-projects",
           "path": "/projects"
-        },
-        {
-          "name": "create",
+        },{
+          "name": "create-project",
           "method": "POST",
           "path": "/projects",
           "data": {
             "name": "{project}"
           }
-        }
-      ]
+        },{
+          "name":"view-tasks",
+          "path":"/tasks"
+        }]
     }
   ]
 }

@@ -2,40 +2,45 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/NearlyUnique/capi"
 	"github.com/NearlyUnique/capi/autocomplete"
 	"github.com/NearlyUnique/capi/capicomplete"
-	"github.com/pkg/errors"
 )
 
 func main() {
 	printVersion(os.Args)
-	profile, err := loadProfile()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
+	if err := run(); err != nil {
+		logError(err)
 		os.Exit(1)
 	}
-	if autoComplete(profile) {
-		return
-	}
+}
 
-	cmd, err := capi.Prepare(*profile, os.Args)
+func run() error {
+	apiSet, err := capi.Load(capi.DefaultAPISet)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		return err
+	}
+	if autoComplete(apiSet) {
+		return nil
+	}
+	if len(os.Args) == 1 {
+		return errors.New("Insufficient arguments")
+	}
+	cmd, err := apiSet.Prepare(os.Args[1:])
+	if err != nil {
+		return err
 	}
 	req, err := capi.CreateRequest(cmd)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		return err
 	}
 	// make json if --capi-mode = request or all
 	//b, _ := httputil.DumpRequest(req, true)
@@ -44,44 +49,38 @@ func main() {
 	c := http.Client{}
 	resp, err := c.Do(req)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		return err
 	}
 	// make json if --capi-mode = response or all
 	//b, _ = httputil.DumpResponse(resp, true)
 	//fmt.Println(string(b))
 	if resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() {
+			logError(resp.Body.Close())
+		}()
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
-			os.Exit(1)
+			return err
 		}
 		fmt.Print(string(b))
 	}
+	return nil
 }
 
-func loadProfile() (*capi.Profile, error) {
-	profilePath := "./profile.json"
-	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
-		profilePath = os.Getenv("CAPI_PROFILE")
+func logError(err error) {
+	if err == nil {
+		return
 	}
-	if profilePath == "" {
-		return nil, errors.New("./profile.json does not exist and ENV var CAPI_PROFILE not set")
-	}
-	f, err := os.Open(profilePath)
-	if err != nil {
-		return nil, errors.WithMessage(err, fmt.Sprintf("can't open profile %s\n", profilePath))
-	}
-	return capi.LoadAPI(f)
+	// if you can't write to srd error, no one can read the log
+	_, _ = fmt.Fprintln(os.Stderr, err.Error())
 }
 
-func autoComplete(profile *capi.Profile) bool {
+func autoComplete(apiSet *capi.APISet) bool {
 	autocomplete.LogHook = logFn
-	ac := autocomplete.Prepare(os.Args, os.Environ())
+	ac := autocomplete.Parse(os.Args, os.Environ())
 	if ac != nil {
 		logFn("%v", ac)
-		comp := capicomplete.GenerateResponse(ac, profile)
+		comp := capicomplete.GenerateResponse(ac, apiSet)
 		fmt.Print(strings.Join(comp, "\n"))
 		return true
 	}
@@ -96,40 +95,38 @@ func logFn(format string, args ...interface{}) {
 		log.SetOutput(logfile)
 		log.Printf(format, args...)
 	} else {
-		fmt.Fprintln(os.Stderr, err.Error())
+		logError(err)
 	}
 }
 
-var rxMustacheParams = regexp.MustCompile(`{(?P<Name>[a-zA-Z0-9-_]+)}`)
-
-func httpRequest(api *capi.API, cmd *capi.Command, header http.Header) error {
-	c := http.Client{}
-	req, err := http.NewRequest(cmd.Method, "", nil) //api.BaseURL(cmd), nil)
-	if err != nil {
-		return err
-	}
-	req.Header = header
-
-	resp, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	for k, v := range resp.Header {
-		for _, h := range v {
-			fmt.Printf("%v: %v\n", k, h)
-		}
-	}
-
-	_, err = io.Copy(os.Stdout, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+//func httpRequest(api *capi.API, cmd *capi.Command, header http.Header) error {
+//	c := http.Client{}
+//	req, err := http.NewRequest(cmd.Method, "", nil) //api.BaseURL(cmd), nil)
+//	if err != nil {
+//		return err
+//	}
+//	req.Header = header
+//
+//	resp, err := c.Do(req)
+//	if err != nil {
+//		return err
+//	}
+//
+//	defer resp.Body.Close()
+//
+//	for k, v := range resp.Header {
+//		for _, h := range v {
+//			fmt.Printf("%v: %v\n", k, h)
+//		}
+//	}
+//
+//	_, err = io.Copy(os.Stdout, resp.Body)
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
 
 var version = "0.0"
 

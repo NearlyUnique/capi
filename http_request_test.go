@@ -6,15 +6,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/stretchr/testify/assert"
-
 	"github.com/NearlyUnique/capi"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_http_request_can_be_made(t *testing.T) {
-	p := capi.Profile{
+	p := capi.APISet{
 		APIs: []capi.API{
 			{
 				Name:    "an_api",
@@ -44,9 +42,8 @@ func Test_http_request_can_be_made(t *testing.T) {
 			},
 		},
 	}
-
-	args := []string{"cli_cmd", "an_api", "api_cmd"}
-	cmd, err := capi.Prepare(p, args)
+	args := []string{"an_api", "api_cmd"}
+	cmd, err := p.Prepare(args)
 
 	t.Run("for valid arguments the cmd is prepared", func(t *testing.T) {
 		assert.NoError(t, err)
@@ -60,7 +57,7 @@ func Test_http_request_can_be_made(t *testing.T) {
 		assert.Equal(t, "POST", req.Method)
 		assert.Equal(t, "application/json", req.Header.Get("Content-Type"))
 	})
-	t.Run("literal url profile generates the same url", func(t *testing.T) {
+	t.Run("literal url apiSet generates the same url", func(t *testing.T) {
 		req, err := capi.CreateRequest(cmd)
 		assert.NoError(t, err)
 
@@ -68,8 +65,8 @@ func Test_http_request_can_be_made(t *testing.T) {
 
 	})
 	t.Run("url parameters are replaced", func(t *testing.T) {
-		args := []string{"cli_cmd", "an_api", "api_cmd_args", "--v1=first", "--v2", "second"}
-		cmd, err := capi.Prepare(p, args)
+		args := []string{"an_api", "api_cmd_args", "--v1=first", "--v2", "second"}
+		cmd, err := p.Prepare(args)
 		require.NoError(t, err)
 		req, err := capi.CreateRequest(cmd)
 		assert.NoError(t, err)
@@ -78,8 +75,8 @@ func Test_http_request_can_be_made(t *testing.T) {
 
 	})
 	t.Run("headers with value expansion are added", func(t *testing.T) {
-		args := []string{"cli_cmd", "an_api", "api_cmd_args", "--any-arg", "value1"}
-		cmd, err := capi.Prepare(p, args)
+		args := []string{"an_api", "api_cmd_args", "--any-arg", "value1"}
+		cmd, err := p.Prepare(args)
 		require.NoError(t, err)
 
 		req, err := capi.CreateRequest(cmd)
@@ -108,8 +105,8 @@ func Test_http_request_can_be_made(t *testing.T) {
 		p.APIs[0].Commands[0].Data = []byte(example)
 		p.APIs[0].BaseURL = ts.URL
 
-		args := []string{"cli_cmd", "an_api", "api_cmd", "--arg1=value1"}
-		cmd, err := capi.Prepare(p, args)
+		args := []string{"an_api", "api_cmd", "--arg1=value1"}
+		cmd, err := p.Prepare(args)
 		require.NoError(t, err)
 
 		req, err := capi.CreateRequest(cmd)

@@ -10,7 +10,7 @@ import (
 )
 
 func Test_when_nothing_is_entered_the_full_list_of_apis_is_displayed(t *testing.T) {
-	p := capi.Profile{APIs: []capi.API{
+	p := capi.APISet{APIs: []capi.API{
 		{Name: "one"},
 		{Name: "two"},
 	}}
@@ -22,7 +22,7 @@ func Test_when_nothing_is_entered_the_full_list_of_apis_is_displayed(t *testing.
 }
 
 func Test_when_partial_api_name_is_given_leading_submatches_are_returned(t *testing.T) {
-	p := capi.Profile{APIs: []capi.API{
+	p := capi.APISet{APIs: []capi.API{
 		{Name: "aaa"},
 		{Name: "aaa-other"},
 		{Name: "xxx-other"},
@@ -42,7 +42,7 @@ func Test_when_partial_api_name_is_given_leading_submatches_are_returned(t *test
 	})
 }
 func Test_searching_for_command_within_api(t *testing.T) {
-	p := capi.Profile{APIs: []capi.API{
+	p := capi.APISet{APIs: []capi.API{
 		{Name: "aaa"},
 		{Name: "bbb",
 			Commands: []capi.Command{
@@ -57,7 +57,7 @@ func Test_searching_for_command_within_api(t *testing.T) {
 	assert.Contains(t, options, "cmd1")
 }
 func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
-	p := capi.Profile{APIs: []capi.API{
+	p := capi.APISet{APIs: []capi.API{
 		{Name: "an_api",
 			Commands: []capi.Command{
 				{Name: "a_cmd", Path: "/one/{first_arg}", Header: map[string]string{"header1": "any", "header2": "any"}},
@@ -92,7 +92,7 @@ func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
 }
 
 func Test_header_special_case(t *testing.T) {
-	p := capi.Profile{APIs: []capi.API{{
+	p := capi.APISet{APIs: []capi.API{{
 		Name: "an_api",
 		Commands: []capi.Command{{
 			Name: "a_cmd",

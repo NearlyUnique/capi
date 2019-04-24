@@ -7,7 +7,14 @@ import (
 	"github.com/NearlyUnique/capi/autocomplete"
 )
 
-func GenerateResponse(ac *autocomplete.Params, p *capi.Profile) []string {
+func indexOrEmpty(args []string, i int) string {
+	if i < 0 || i >= len(args) {
+		return ""
+	}
+	return args[i]
+}
+
+func GenerateResponse(ac *autocomplete.Params, apis *capi.APISet) []string {
 	var filtered, all []string
 	const (
 		indexNone    = -1
@@ -22,7 +29,7 @@ func GenerateResponse(ac *autocomplete.Params, p *capi.Profile) []string {
 		}
 		fallthrough
 	case indexAPI:
-		for _, api := range p.APIs {
+		for _, api := range apis.APIs {
 			// filter
 			if strings.HasPrefix(api.Name, ac.Word) {
 				//always store simple answer just in case
@@ -35,7 +42,7 @@ func GenerateResponse(ac *autocomplete.Params, p *capi.Profile) []string {
 			filtered = all
 		}
 	case indexCommand:
-		api, err := p.SelectAPI(ac.Args())
+		api, err := apis.SelectAPI(indexOrEmpty(ac.Args(), 0))
 		if err != nil {
 			return []string{"error", err.Error()}
 		}
@@ -52,11 +59,11 @@ func GenerateResponse(ac *autocomplete.Params, p *capi.Profile) []string {
 		}
 	default:
 		// must be looking for args
-		api, err := p.SelectAPI(ac.Args())
+		api, err := apis.SelectAPI(indexOrEmpty(ac.Args(), 0))
 		if err != nil {
 			return []string{"no such api", err.Error()}
 		}
-		cmd, err := p.SelectCommand(api, ac.Args())
+		cmd, err := api.SelectCommand(indexOrEmpty(ac.Args(), 1))
 		if err != nil {
 			return []string{"no such command", err.Error()}
 		}

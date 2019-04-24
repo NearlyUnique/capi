@@ -9,7 +9,7 @@ This package performs 2 simple tasks.
 
 ## Basic inputs
 
-The `complete`bash command is fairly straightforward but was not obvious to integrate with
+The `complete` bash command is fairly straightforward but was not obvious to integrate with
 
 ### Installation
 
@@ -17,7 +17,7 @@ The `complete`bash command is fairly straightforward but was not obvious to inte
 complete -C command name
 ```
 
-where `-C` specifies a command (rather than a function or other type), `command` is the command buing 'completed' and `name` is the name of the command performing the completion suggestions. 
+where `-C` specifies a command (rather than a function or other type), `command` is the command using 'complete' and `name` is the name of the command performing the completion suggestions. 
 
 ### CLI arguments
 

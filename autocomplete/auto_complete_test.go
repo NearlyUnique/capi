@@ -31,12 +31,12 @@ func Test_auto_complete_data_is_generated(t *testing.T) {
 	}
 	t.Run("must have 3 string arguments to cli", func(t *testing.T) {
 		// zeroth argument is ALWAYS the name of the running program, e.g. the complete app
-		assert.Nil(t, autocomplete.Prepare([]string{}, env))
-		assert.Nil(t, autocomplete.Prepare([]string{"one"}, env))
-		assert.Nil(t, autocomplete.Prepare([]string{"one", "two"}, env))
-		assert.Nil(t, autocomplete.Prepare([]string{"one", "two", "three"}, env))
-		assert.NotNil(t, autocomplete.Prepare([]string{"one", "two", "three", "four"}, env))
-		assert.Nil(t, autocomplete.Prepare([]string{"one", "two", "three", "four", "five"}, env))
+		assert.Nil(t, autocomplete.Parse([]string{}, env))
+		assert.Nil(t, autocomplete.Parse([]string{"one"}, env))
+		assert.Nil(t, autocomplete.Parse([]string{"one", "two"}, env))
+		assert.Nil(t, autocomplete.Parse([]string{"one", "two", "three"}, env))
+		assert.NotNil(t, autocomplete.Parse([]string{"one", "two", "three", "four"}, env))
+		assert.Nil(t, autocomplete.Parse([]string{"one", "two", "three", "four", "five"}, env))
 	})
 	t.Run("must have required env var", func(t *testing.T) {
 
@@ -44,15 +44,15 @@ func Test_auto_complete_data_is_generated(t *testing.T) {
 			//t.Log(fmt.Sprintf(format, args...))
 			//t.FailNow()
 		}
-		assert.NotNil(t, autocomplete.Prepare(args, env))
+		assert.NotNil(t, autocomplete.Parse(args, env))
 
 		remove := []string{"COMP_LINE", "COMP_TYPE", "COMP_KEY", "COMP_POINT"}
 		for _, rem := range remove {
-			assert.Nil(t, autocomplete.Prepare(args, copyWithoutKey(env, rem)), fmt.Sprintf("%s was removed", rem))
+			assert.Nil(t, autocomplete.Parse(args, copyWithoutKey(env, rem)), fmt.Sprintf("%s was removed", rem))
 		}
 	})
 	t.Run("when all components are available", func(t *testing.T) {
-		ac := autocomplete.Prepare(args, env)
+		ac := autocomplete.Parse(args, env)
 
 		require.NotNil(t, ac)
 		assert.True(t, reflect.DeepEqual(&ExpAc, ac), "expected:%v\nactual: %v\n", ExpAc, ac)
