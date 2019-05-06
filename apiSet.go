@@ -74,12 +74,12 @@ func ParseAPI(r io.ReadCloser) (*APISet, error) {
 	if err != nil {
 		return nil, err
 	}
-	var profile APISet
-	err = json.Unmarshal(buf, &profile)
+	var apiSet APISet
+	err = json.Unmarshal(buf, &apiSet)
 	if err != nil {
 		return nil, err
 	}
-	return &profile, err
+	return &apiSet, err
 }
 
 //func (apiSet *APISet) SelectAPI(args []string) (*API, error) {
@@ -89,6 +89,7 @@ func ParseAPI(r io.ReadCloser) (*APISet, error) {
 //	apiName := args[argIndexAPI]
 //	return apiSet.SelectAPI(apiName)
 //}
+
 // SelectAPI selects based on the os.Args
 func (apiSet *APISet) SelectAPI(apiName string) (*API, error) {
 	for _, a := range apiSet.APIs {

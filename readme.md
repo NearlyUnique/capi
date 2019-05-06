@@ -20,7 +20,7 @@ The `profile.json` file (or a file path held in env var `CAPI_PROFILE`) holds al
         },
         "commands": [{
             "name":"status",
-            "path":"/status/{code",
+            "path":"/status/{code}",
             "defaultHeader": {
                 "x-a-header":"{arg2}"
             }
