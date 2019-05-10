@@ -13,13 +13,24 @@ func Test_sources(t *testing.T) {
 	t.Run("base url parameters are replaced", func(t *testing.T) {
 		set := builder.APISet{
 			APIs: []builder.API{{
+				Name: "api", BaseURL: "http://example.com",
+				Commands: []builder.Command{{Name: "command"}},
+			}},
+		}
+		req, err := set.APIs[0].Commands[0].CreateRequest()
+
+		require.Error(t, err)
+		assert.Nil(t, req)
+	})
+	t.Run("base url parameters are replaced", func(t *testing.T) {
+		set := builder.APISet{
+			APIs: []builder.API{{
 				Name: "the_name", BaseURL: "{some_url}",
 				Commands: []builder.Command{{Name: "anyName"}},
 			}},
 		}
 		set.Prepare()
-		req, err := builder.CreateRequest(
-			set.APIs[0].Commands[0],
+		req, err := set.APIs[0].Commands[0].CreateRequest(
 			fakeSource("some_url", "http://example.com"),
 		)
 
@@ -38,8 +49,7 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := builder.CreateRequest(
-			set.APIs[0].Commands[0],
+		req, err := set.APIs[0].Commands[0].CreateRequest(
 			fakeSource("arg1", "value_one"),
 		)
 
@@ -61,8 +71,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := builder.CreateRequest(
-			set.APIs[0].Commands[0],
+		req, err := set.APIs[0].Commands[0].CreateRequest(
 			fakeSource("some_url", "https://example.com"),
 			fakeSource("arg1", "value_one"),
 		)
@@ -84,8 +93,7 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := builder.CreateRequest(
-			set.APIs[0].Commands[0],
+		req, err := set.APIs[0].Commands[0].CreateRequest(
 			fakeSource("some_header", "some_value"),
 		)
 
@@ -111,8 +119,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := builder.CreateRequest(
-			set.APIs[0].Commands[0],
+		req, err := set.APIs[0].Commands[0].CreateRequest(
 			fakeSource("command_header", "cmd_header_value"),
 		)
 
@@ -139,8 +146,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := builder.CreateRequest(
-			set.APIs[0].Commands[0],
+		req, err := set.APIs[0].Commands[0].CreateRequest(
 			fakeSource("command_override", "from_source"),
 		)
 
@@ -160,8 +166,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := builder.CreateRequest(
-			set.APIs[0].Commands[0],
+		req, err := set.APIs[0].Commands[0].CreateRequest(
 			fakeSource("some_arg", "arg_value"),
 		)
 
@@ -185,9 +190,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := builder.CreateRequest(
-			set.APIs[0].Commands[0],
-		)
+		req, err := set.APIs[0].Commands[0].CreateRequest()
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)
@@ -208,8 +211,7 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := builder.CreateRequest(
-			set.APIs[0].Commands[0],
+		req, err := set.APIs[0].Commands[0].CreateRequest(
 			fakeSource("query_value", "replacement_value"),
 		)
 
@@ -236,14 +238,13 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := builder.CreateRequest(set.APIs[0].Commands[0])
+		req, err := set.APIs[0].Commands[0].CreateRequest()
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)
 
 		assert.Contains(t, req.URL.RawQuery, "q=command_value")
 	})
-	///////////////
 	t.Run("if no method is set, GET is used", func(t *testing.T) {
 		set := builder.APISet{
 			APIs: []builder.API{{
@@ -254,7 +255,7 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := builder.CreateRequest(set.APIs[0].Commands[0])
+		req, err := set.APIs[0].Commands[0].CreateRequest()
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)
@@ -272,12 +273,73 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := builder.CreateRequest(set.APIs[0].Commands[0])
+		req, err := set.APIs[0].Commands[0].CreateRequest()
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)
 
 		assert.Equal(t, http.MethodPatch, req.Method)
+	})
+}
+
+func Test_api_command_search(t *testing.T) {
+	set := builder.APISet{
+		APIs: []builder.API{
+			{
+				Name:    "the_api",
+				BaseURL: "https://one.example.com",
+				Commands: []builder.Command{
+					{Name: "the_command", Path: "/path"},
+					{Name: "other_command"},
+				},
+			},
+			{
+				Name:    "other_api",
+				BaseURL: "https://two.example.com",
+				Commands: []builder.Command{
+					{Name: "the_command"},
+				},
+			},
+		},
+	}
+	t.Run("zero api matches returns error", func(t *testing.T) {
+		actual, err := set.CreateRequest("unknown", "")
+
+		assert.Error(t, err)
+		_, ok := err.(builder.NotFound)
+		assert.True(t, ok)
+		assert.Nil(t, actual)
+	})
+	t.Run("more than one api matches returns error", func(t *testing.T) {
+		actual, err := set.CreateRequest("api", "")
+
+		assert.Error(t, err)
+		_, ok := err.(builder.NotFound)
+		assert.True(t, ok)
+		assert.Nil(t, actual)
+	})
+	t.Run("zero command matches returns error", func(t *testing.T) {
+		actual, err := set.CreateRequest("the_api", "unknown")
+
+		assert.Error(t, err)
+		_, ok := err.(builder.NotFound)
+		assert.True(t, ok)
+		assert.Nil(t, actual)
+	})
+	t.Run("more than one command matches returns error", func(t *testing.T) {
+		actual, err := set.CreateRequest("the_api", "command")
+
+		assert.Error(t, err)
+		_, ok := err.(builder.NotFound)
+		assert.True(t, ok)
+		assert.Nil(t, actual)
+	})
+	t.Run("one api and one command returns http request", func(t *testing.T) {
+		actual, err := set.CreateRequest("the_api", "the_command")
+
+		require.NoError(t, err)
+		require.NotNil(t, actual)
+		assert.Equal(t, "https://one.example.com/path", actual.URL.String())
 	})
 }
 

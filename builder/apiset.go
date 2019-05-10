@@ -1,7 +1,9 @@
 package builder
 
 import (
+	"fmt"
 	"net/url"
+	"strings"
 
 	"golang.org/x/xerrors"
 )
@@ -64,10 +66,46 @@ func validateURL(uri string) error {
 }
 
 func (set *APISet) Prepare() {
-	for i, api := range set.APIs {
-		set.APIs[i].Set = set
+	for _, api := range set.APIs {
 		api.prepare()
 	}
+}
+
+type (
+	//NotFound api or command
+	NotFound string
+)
+
+func (e NotFound) Error() string {
+	return fmt.Sprintf("search for '%s' returned no results", string(e))
+}
+
+func (set *APISet) FindAPI(name string) ([]*API, error) {
+	var list []*API
+	var err error = NotFound(name)
+	lowerName := strings.ToLower(name)
+	for i := range set.APIs {
+		//todo: can we do this WITHOUT the extra allocation?
+		if strings.Contains(strings.ToLower(set.APIs[i].Name), lowerName) {
+			list = append(list, &set.APIs[i])
+			err = nil
+		}
+	}
+	return list, err
+}
+
+func (api *API) FindCommand(name string) ([]*Command, error) {
+	var list []*Command
+	var err error = NotFound(name)
+	lowerName := strings.ToLower(name)
+	for i := range api.Commands {
+		//todo: can we do this WITHOUT the extra allocation?
+		if strings.Contains(strings.ToLower(api.Commands[i].Name), lowerName) {
+			list = append(list, &api.Commands[i])
+			err = nil
+		}
+	}
+	return list, err
 }
 
 func (api *API) prepare() {

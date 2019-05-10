@@ -3,10 +3,35 @@ package builder
 import (
 	"net/http"
 	"regexp"
+
+	"golang.org/x/xerrors"
 )
 
+//CreateRequest by searching the set for a single api/command combination
+func (set *APISet) CreateRequest(api, command string, sources ...SourceFn) (*http.Request, error) {
+	apis, err := set.FindAPI(api)
+	if err != nil {
+		return nil, err
+	}
+	if len(apis) != 1 {
+		return nil, NotFound(api)
+	}
+	cmds, err := apis[0].FindCommand(command)
+	if err != nil {
+		return nil, err
+	}
+	if len(cmds) != 1 {
+		return nil, NotFound(command)
+	}
+	cmds[0].API = apis[0]
+	return cmds[0].CreateRequest(sources...)
+}
+
 // CreateRequest
-func CreateRequest(cmd Command, sources ...SourceFn) (*http.Request, error) {
+func (cmd Command) CreateRequest(sources ...SourceFn) (*http.Request, error) {
+	if cmd.API == nil {
+		return nil, xerrors.New("APISet.Prepare has not been called")
+	}
 	uri := joinUrlFragments(cmd.API.BaseURL, cmd.Path)
 	uri = applyReplacement(uri, sources)
 
