@@ -1,7 +1,6 @@
 package builder
 
 import (
-	"net/http"
 	"net/url"
 
 	"golang.org/x/xerrors"
@@ -25,42 +24,54 @@ type (
 	Command struct {
 		Name   string
 		Path   string
+		Method string
 		Header map[string][]string
 		Query  map[string][]string
 		API    *API
-		Method string
 	}
 )
 
-func (api *API) Add(cmd Command) error {
-	if cmd.Name == "" {
-		return xerrors.New("missing name")
+func joinUrlFragments(base, path string) string {
+	if base == "" {
+		return path
 	}
-	cmd.API = api
-	if cmd.Method == "" {
-		cmd.Method = http.MethodGet
+	if path == "" {
+		return base
 	}
-	api.Commands = append(api.Commands, cmd)
+	b := base[len(base)-1] == '/'
+	p := path[0] == '/'
+	if !b && !p {
+		return base + "/" + path
+	}
+	if b && p {
+		return base + path[1:]
+	}
+	return base + path
+}
+
+func validateURL(uri string) error {
+	u, err := url.Parse(uri)
+	if err != nil {
+		return err
+	}
+	if u.Scheme != "https" && u.Scheme != "http" {
+		return xerrors.Errorf("unsupported scheme: '%s'", uri)
+	}
+	if u.RawQuery != "" {
+		return xerrors.Errorf("base URL cannot have query: '%s'", uri)
+	}
 	return nil
 }
 
-func (cmd *Command) CreateRequest() (*http.Request, error) {
-	uri, _ := url.Parse(cmd.API.BaseURL + cmd.Path)
-	req := &http.Request{
-		Method: cmd.Method,
-		URL:    uri,
+func (set *APISet) Prepare() {
+	for i, api := range set.APIs {
+		set.APIs[i].Set = set
+		api.prepare()
 	}
-	return req, nil
 }
 
-func (set *APISet) Add(api API) error {
-	if api.Name == "" {
-		return xerrors.Errorf("missing name")
+func (api *API) prepare() {
+	for i := range api.Commands {
+		api.Commands[i].API = api
 	}
-	if api.BaseURL == "" {
-		return xerrors.Errorf("missing baseUrl")
-	}
-	api.Set = set
-	set.APIs = append(set.APIs, api)
-	return nil
 }
