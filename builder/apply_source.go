@@ -40,7 +40,7 @@ func CreateRequest(cmd Command, sources ...SourceFn) (*http.Request, error) {
 
 func applyToHeaders(headers map[string][]string, req *http.Request, apply func(v string) string) {
 	for k, v := range headers {
-		//req.Header.Del(k)
+		req.Header.Del(k)
 		for _, item := range v {
 			req.Header.Add(k, apply(item))
 		}
