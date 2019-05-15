@@ -3,8 +3,9 @@
 all: build
 
 build: test
-	cd cmd;\
-	go build -o ../capi;
+	go build
+	#cd cmd;\
+	#go build -o ../capi;
 
 test:
 	go test ./... -vet all

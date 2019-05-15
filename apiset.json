@@ -1,0 +1,18 @@
+{
+  "apis": [
+    {
+      "name": "httpbin",
+      "baseUrl": "https://httpbin.org",
+      "header": {
+        "accept": ["application/json"],
+        "user-agent": ["capi v/0.0"]
+      },
+      "commands": [
+        {
+          "name": "get",
+          "path": "/anything/{value}"
+        }
+      ]
+    }
+  ]
+}

@@ -81,6 +81,7 @@ func (e NotFound) Error() string {
 }
 
 func (set *APISet) FindAPI(name string) ([]*API, error) {
+
 	var list []*API
 	var err error = NotFound(name)
 	lowerName := strings.ToLower(name)

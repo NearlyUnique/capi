@@ -9,6 +9,9 @@ import (
 
 //CreateRequest by searching the set for a single api/command combination
 func (set *APISet) CreateRequest(api, command string, sources ...SourceFn) (*http.Request, error) {
+	if set == nil {
+		return nil, InvalidOperation("nil apiset")
+	}
 	apis, err := set.FindAPI(api)
 	if err != nil {
 		return nil, err

@@ -9,6 +9,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_calling_createRequest_with_nil_set_returns_error(t *testing.T) {
+	var set *builder.APISet
+
+	req, err := set.CreateRequest("", "")
+
+	require.Error(t, err)
+	assert.Nil(t, req)
+	_, ok := err.(builder.InvalidOperation)
+	assert.True(t, ok)
+}
+
 func Test_find_api_in_set(t *testing.T) {
 	t.Run("an_empty_api_set_will_return_nil", func(t *testing.T) {
 		set := builder.APISet{}
