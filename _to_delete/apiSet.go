@@ -1,4 +1,4 @@
-package capi
+package _to_delete
 
 import (
 	"encoding/json"

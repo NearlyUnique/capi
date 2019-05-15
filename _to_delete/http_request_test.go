@@ -1,4 +1,4 @@
-package capi_test
+package _to_delete_test
 
 import (
 	"io/ioutil"
