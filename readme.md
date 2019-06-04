@@ -4,7 +4,7 @@ Circle CI: [![CircleCI](https://circleci.com/gh/NearlyUnique/capi.svg?style=svg)
 
 ## Overview
 
-`capi` is a tool to simplify ad-hoc api testing where you might use `curl` with or without a wrapping shell script. Commonly used values can be collected from the command line, a `profile.json` file or input from some other `json` file. To help further bash ato complete is built in and is dynamic based on the api you have configured and are trying to call.
+`capi` is a tool to simplify ad-hoc api testing where you might use `curl` with or without a wrapping shell script. Commonly used values can be collected from the command line, a `apiset.json` file or input from some other `json` file. To help further bash ato complete is built in and is dynamic based on the api you have configured and are trying to call.
 
 The `profile.json` file (or a file path held in env var `CAPI_PROFILE`) holds all api information. The profile lists apis, each api lists commands.
 

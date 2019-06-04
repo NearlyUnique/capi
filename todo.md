@@ -19,9 +19,9 @@ An unordered thinking space for new features.
     - apt-get
  - import from
    - swagger
+   - curl statement
    - cli history
    - postman
-   - curl statement
 
 ## Random
 

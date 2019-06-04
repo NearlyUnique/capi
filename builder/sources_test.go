@@ -355,7 +355,7 @@ func Test_env_source_is_case_insensitive(t *testing.T) {
 		{"one=has space", "has space"},
 	}
 	for _, item := range testData {
-		envSrc := builder.NewCaseInsensitiveSource([]string{item.envVar})
+		envSrc := builder.NewEnvVarsSource([]string{item.envVar})
 		for _, k := range keys {
 			assert.Equal(t, item.value, envSrc(k))
 		}

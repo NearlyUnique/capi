@@ -5,8 +5,9 @@ import (
 )
 
 type SourceFn func(string) string
+type SourceErrorFn func(error)
 
-func NewCaseInsensitiveSource(list []string) SourceFn {
+func NewEnvVarsSource(list []string) SourceFn {
 	m := make(map[string]string)
 	for _, e := range list {
 		parts := strings.Split(e, "=")
