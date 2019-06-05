@@ -1,8 +1,10 @@
 package builder
 
 import (
+	"io"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"golang.org/x/xerrors"
 )
@@ -38,7 +40,12 @@ func (cmd Command) CreateRequest(sources ...SourceFn) (*http.Request, error) {
 	uri := joinUrlFragments(cmd.API.BaseURL, cmd.Path)
 	uri = applyReplacement(uri, sources)
 
-	req, err := http.NewRequest(cmd.Method, uri, nil)
+	var payload io.Reader
+	if cmd.Body != nil {
+		buf := applyReplacement(string(cmd.Body.Data), sources)
+		payload = strings.NewReader(buf)
+	}
+	req, err := http.NewRequest(cmd.Method, uri, payload)
 	if err != nil {
 		return nil, err
 	}

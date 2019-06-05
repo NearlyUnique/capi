@@ -1,6 +1,7 @@
 package builder_test
 
 import (
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -279,6 +280,54 @@ func Test_sources(t *testing.T) {
 		require.NotNil(t, req)
 
 		assert.Equal(t, http.MethodPatch, req.Method)
+	})
+	t.Run("if a body is set, it is included in the request", func(t *testing.T) {
+		set := builder.APISet{
+			APIs: []builder.API{{
+				Name:    "the_name",
+				BaseURL: "http://any.org",
+				Commands: []builder.Command{{
+					Name: "anyName",
+					Body: &builder.CommandBody{Data: []byte(`some data`)},
+				}},
+			}},
+		}
+		set.Prepare()
+
+		req, err := set.APIs[0].Commands[0].CreateRequest()
+
+		assert.NoError(t, err)
+		require.NotNil(t, req)
+		require.NotNil(t, req.Body)
+
+		buf, err := ioutil.ReadAll(req.Body)
+		defer func() { _ = req.Body.Close() }()
+
+		assert.Equal(t, "some data", string(buf))
+	})
+	t.Run("if a body is set, it is included in the request with replacement text", func(t *testing.T) {
+		set := builder.APISet{
+			APIs: []builder.API{{
+				Name:    "the_name",
+				BaseURL: "http://any.org",
+				Commands: []builder.Command{{
+					Name: "anyName",
+					Body: &builder.CommandBody{Data: []byte(`{"any":"{the_arg}"}`)},
+				}},
+			}},
+		}
+		set.Prepare()
+
+		req, err := set.APIs[0].Commands[0].CreateRequest(fakeSource("the_arg", "replacement_value"))
+
+		assert.NoError(t, err)
+		require.NotNil(t, req)
+		require.NotNil(t, req.Body)
+
+		buf, err := ioutil.ReadAll(req.Body)
+		defer func() { _ = req.Body.Close() }()
+
+		assert.Equal(t, `{"any":"replacement_value"}`, string(buf))
 	})
 }
 

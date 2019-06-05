@@ -11,6 +11,19 @@
         {
           "name": "get",
           "path": "/anything/{value}"
+        },
+        {
+          "name": "write",
+          "method": "POST",
+          "path": "/post",
+          "content-type": ["application/json"],
+          "body": {
+            "literal_string": "string",
+            "literal_number": 42,
+            "literal_bool": true,
+            "object" : {"isObject": true},
+            "with_replacement": "{attribute}"
+          }
         }
       ]
     }
