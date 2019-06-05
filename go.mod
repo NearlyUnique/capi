@@ -3,6 +3,7 @@ module github.com/NearlyUnique/capi
 require (
 	github.com/NearlyUnique/pflag v1.0.4-0.20190604125058-e20cc26a6365
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024 // indirect
 	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.3

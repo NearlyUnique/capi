@@ -1,5 +1,7 @@
 .PHONY: test install cover
 
+TEST_RESULTS ?= ./test-results
+
 all: build
 
 build: test
@@ -8,7 +10,9 @@ build: test
 	#go build -o ../capi;
 
 test:
-	go test ./... -vet all
+	mkdir -p $(TEST_RESULTS)
+	go get github.com/jstemmer/go-junit-report
+	go test ./... -v -vet all | go-junit-report > $(TEST_RESULTS)/report.xml
 
 install:
 	echo complete -C ./capi capi

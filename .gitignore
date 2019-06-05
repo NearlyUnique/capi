@@ -6,5 +6,6 @@ cover.*
 
 capi
 coverage.out
+report.xml
 Run
 
