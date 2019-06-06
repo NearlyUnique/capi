@@ -1,6 +1,7 @@
 package capicomplete
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/NearlyUnique/capi/autocomplete"
@@ -42,38 +43,51 @@ func GenerateResponse(ac *autocomplete.Params, apis *builder.APISet) []string {
 			filtered = all
 		}
 	case indexCommand:
-		//api, err := apis.FindAPI(indexOrEmpty(ac.Args(), 0))
-		//if err != nil {
-		//	return []string{"error", err.Error()}
-		//}
-		//for _, cmd := range api.Commands {
-		//	// filter
-		//	if strings.HasPrefix(cmd.Name, ac.Word) {
-		//		//always store simple answer just in case
-		//		filtered = append(filtered, cmd.Name)
-		//	}
-		//	all = append(all, cmd.Name)
-		//}
-		//if len(filtered) == 0 {
-		//	filtered = all
-		//}
+		apiName := indexOrEmpty(ac.Args(), 0)
+		api, err := apis.FindAPI(apiName)
+		if err != nil {
+			return []string{"error", err.Error()}
+		}
+		if len(api) != 1 {
+			return []string{"error", fmt.Sprintf("API '%s' ambiguous", apiName)}
+		}
+		// we guess the first one is ok
+		for _, cmd := range api[0].Commands {
+			// filter
+			if strings.HasPrefix(cmd.Name, ac.Word) {
+				//always store simple answer just in case
+				filtered = append(filtered, cmd.Name)
+			}
+			all = append(all, cmd.Name)
+		}
+		if len(filtered) == 0 {
+			filtered = all
+		}
 	default:
-		//// must be looking for args
-		//api, err := apis.SelectAPI(indexOrEmpty(ac.Args(), 0))
-		//if err != nil {
-		//	return []string{"no such api", err.Error()}
-		//}
-		//cmd, err := api.SelectCommand(indexOrEmpty(ac.Args(), 1))
-		//if err != nil {
-		//	return []string{"no such command", err.Error()}
-		//}
-		//
-		//for _, param := range cmd.ListParams() {
-		//	dashed := "--" + param
-		//	if strings.HasPrefix(dashed, ac.Word) {
-		//		filtered = append(filtered, dashed)
-		//	}
-		//}
+		// must be looking for args
+		apiName := indexOrEmpty(ac.Args(), 0)
+		api, err := apis.FindAPI(apiName)
+		if err != nil {
+			return []string{"error", err.Error()}
+		}
+		if len(api) != 1 {
+			return []string{"error", fmt.Sprintf("API '%s' ambiguous", apiName)}
+		}
+		cmdName := indexOrEmpty(ac.Args(), 1)
+		cmd, err := api[0].FindCommand(cmdName)
+		if err != nil {
+			return []string{"error", err.Error()}
+		}
+		if len(cmd) != 1 {
+			return []string{"error", fmt.Sprintf("command '%s' ambiguous", cmdName)}
+		}
+
+		for _, param := range builder.ListParams(cmd[0]) {
+			dashed := "--" + param
+			if strings.HasPrefix(dashed, ac.Word) {
+				filtered = append(filtered, dashed)
+			}
+		}
 	}
 
 	return filtered

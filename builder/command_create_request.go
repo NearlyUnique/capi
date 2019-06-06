@@ -38,11 +38,14 @@ func (cmd Command) CreateRequest(sources ...SourceFn) (*http.Request, error) {
 		return nil, xerrors.New("APISet.Prepare has not been called")
 	}
 	uri := joinUrlFragments(cmd.API.BaseURL, cmd.Path)
-	uri = applyReplacement(uri, sources)
+	applier := func(value string) string {
+		return applyReplacement(value, sources)
+	}
+	uri = applier(uri)
 
 	var payload io.Reader
 	if cmd.Body != nil {
-		buf := applyReplacement(string(cmd.Body.Data), sources)
+		buf := applier(string(cmd.Body.Data))
 		payload = strings.NewReader(buf)
 	}
 	req, err := http.NewRequest(cmd.Method, uri, payload)
@@ -50,9 +53,6 @@ func (cmd Command) CreateRequest(sources ...SourceFn) (*http.Request, error) {
 		return nil, err
 	}
 
-	applier := func(value string) string {
-		return applyReplacement(value, sources)
-	}
 	applyToHeaders(cmd.API.Header, req, applier)
 	applyToHeaders(cmd.Header, req, applier)
 

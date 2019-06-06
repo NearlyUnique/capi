@@ -58,3 +58,13 @@ func Test_body_can_be_an_array(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "[1,2,3,4]", string(cmd.Body.String()))
 }
+
+func Test_commandBody_stringer_return_empty_string_if_nil(t *testing.T) {
+	var cmd *builder.CommandBody
+	assert.Equal(t, "", cmd.String())
+}
+
+func Test_commandBody_stringer_return_empty_string_if_data_is_nil(t *testing.T) {
+	cmd := &builder.CommandBody{}
+	assert.Equal(t, "", cmd.String())
+}

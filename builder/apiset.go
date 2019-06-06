@@ -1,11 +1,7 @@
 package builder
 
 import (
-	"fmt"
-	"net/url"
 	"strings"
-
-	"golang.org/x/xerrors"
 )
 
 type (
@@ -32,23 +28,7 @@ type (
 		Body   *CommandBody
 		API    *API
 	}
-	CommandBody struct {
-		Data []byte
-	}
 )
-
-func (body *CommandBody) UnmarshalJSON(data []byte) error {
-	l := len(data)
-	if l >= 2 && data[0] == '"' && data[l-1] == '"' {
-		data = data[1 : l-1]
-	}
-	body.Data = data
-	return nil
-}
-
-func (body *CommandBody) String() string {
-	return string(body.Data)
-}
 
 func joinUrlFragments(base, path string) string {
 	if base == "" {
@@ -68,33 +48,10 @@ func joinUrlFragments(base, path string) string {
 	return base + path
 }
 
-func validateURL(uri string) error {
-	u, err := url.Parse(uri)
-	if err != nil {
-		return err
-	}
-	if u.Scheme != "https" && u.Scheme != "http" {
-		return xerrors.Errorf("unsupported scheme: '%s'", uri)
-	}
-	if u.RawQuery != "" {
-		return xerrors.Errorf("base URL cannot have query: '%s'", uri)
-	}
-	return nil
-}
-
 func (set *APISet) Prepare() {
 	for _, api := range set.APIs {
 		api.prepare()
 	}
-}
-
-type (
-	//NotFound api or command
-	NotFound string
-)
-
-func (e NotFound) Error() string {
-	return fmt.Sprintf("search for '%s' returned no results", string(e))
 }
 
 func (set *APISet) FindAPI(name string) ([]*API, error) {
