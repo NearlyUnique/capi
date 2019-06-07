@@ -91,7 +91,6 @@ func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 		ac := autocomplete.Mock("any an_api a_cmd ", "")
 
 		actual := capicomplete.GenerateResponse(&ac, &set)
@@ -114,7 +113,6 @@ func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 
 		ac := autocomplete.Mock("any an_api a_cmd --value", "")
 
@@ -135,7 +133,6 @@ func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 
 		ac := autocomplete.Mock("any an_api a_cmd --value_o", "")
 

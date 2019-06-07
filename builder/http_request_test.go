@@ -1,4 +1,4 @@
-package _to_delete_test
+package builder_test
 
 import (
 	"io/ioutil"
@@ -42,33 +42,43 @@ func Test_http_request_can_be_made(t *testing.T) {
 			},
 		},
 	}
-	set.Prepare()
+	api, err := set.FindAPI("an_api")
+	require.NoError(t, err)
+	cmd, err := api[0].FindCommand("api_cmd")
+	require.NoError(t, err)
+	aCommand := cmd[0]
+	cmd, err = api[0].FindCommand("api_cmd_args")
+	require.NoError(t, err)
+	cmdWithArgs := cmd[0]
 
 	t.Run("a request can be sent", func(t *testing.T) {
-		req, err := set.APIs[0].Commands[0].CreateRequest()
+		req, err := aCommand.CreateRequest()
 		assert.NoError(t, err)
 		assert.Equal(t, "/post", req.URL.Path)
 		assert.Equal(t, "POST", req.Method)
 		assert.Equal(t, "application/json", req.Header.Get("Content-Type"))
 	})
 	t.Run("literal url apiSet generates the same url", func(t *testing.T) {
-		req, err := set.APIs[0].Commands[0].CreateRequest()
+		req, err := aCommand.CreateRequest()
 		assert.NoError(t, err)
 
 		assert.Equal(t, "/post", req.URL.Path)
 
 	})
 	t.Run("url parameters are replaced", func(t *testing.T) {
-		set.Prepare()
-		req, err := set.APIs[0].Commands[0].CreateRequest()
+		req, err := cmdWithArgs.CreateRequest(
+			fakeSource("v1", "first"),
+			fakeSource("v2", "second"),
+		)
 		assert.NoError(t, err)
 
 		assert.Equal(t, "/sub/first/path/second", req.URL.Path)
 	})
 	t.Run("headers with value expansion are added", func(t *testing.T) {
-		set.Prepare()
 
-		req, err := set.APIs[0].Commands[0].CreateRequest()
+		req, err := cmdWithArgs.CreateRequest(
+			fakeSource("any-arg", "value1"),
+		)
 		require.NoError(t, err)
 
 		assert.Equal(t, "value1", req.Header.Get("command-header-key"))
@@ -78,7 +88,7 @@ func Test_http_request_can_be_made(t *testing.T) {
 	t.Run("for a POST, when data has a value it is sent", func(t *testing.T) {
 		base := set.APIs[0].BaseURL
 		defer func() {
-			set.APIs[0].Commands[0].Body = nil
+			aCommand.Body = nil
 			set.APIs[0].BaseURL = base
 		}()
 		// ^^^ fix test, probably better to have separate test data ^^^
@@ -87,23 +97,24 @@ func Test_http_request_can_be_made(t *testing.T) {
 		var actual []byte
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() { _ = r.Body.Close() }()
-			_, err := ioutil.ReadAll(r.Body)
+			var err error
+			actual, err = ioutil.ReadAll(r.Body)
 			require.NoError(t, err)
 		}))
 
-		set.APIs[0].Commands[0].Body = &builder.CommandBody{Data: []byte(example)}
+		aCommand.Body = &builder.CommandBody{Data: []byte(example)}
 		set.APIs[0].BaseURL = ts.URL
 
-		set.Prepare()
-
-		req, err := set.APIs[0].Commands[0].CreateRequest(fakeSource("arg1", "value1"))
+		req, err := aCommand.CreateRequest(
+			fakeSource("arg1", "value1"),
+		)
 		require.NoError(t, err)
 
 		resp, err := ts.Client().Do(req)
 		require.NoError(t, err)
 		require.Equal(t, resp.StatusCode, http.StatusOK)
 
-		assert.Equal(t, len(actual), len(example))
+		assert.Equal(t, len(example), len(actual))
 		assert.Contains(t, string(actual), `"a_key"`)
 		assert.Contains(t, string(actual), `"value1"`)
 	})

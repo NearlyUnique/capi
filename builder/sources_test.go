@@ -18,7 +18,6 @@ func Test_sources(t *testing.T) {
 				Commands: []builder.Command{{Name: "anyName"}},
 			}},
 		}
-		set.Prepare()
 		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("some_url", "http://example.com"),
 		)
@@ -37,7 +36,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("arg1", "value_one"),
 		)
@@ -58,7 +56,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 
 		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("some_url", "https://example.com"),
@@ -81,7 +78,6 @@ func Test_sources(t *testing.T) {
 				Commands: []builder.Command{{Name: "anyName"}},
 			}},
 		}
-		set.Prepare()
 		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("some_header", "some_value"),
 		)
@@ -106,7 +102,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 
 		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("command_header", "cmd_header_value"),
@@ -133,7 +128,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 
 		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("command_override", "from_source"),
@@ -153,7 +147,6 @@ func Test_sources(t *testing.T) {
 				Commands: []builder.Command{{Name: "anyName"}},
 			}},
 		}
-		set.Prepare()
 
 		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("some_arg", "arg_value"),
@@ -177,7 +170,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 
 		req, err := firstCmd(t, set).CreateRequest()
 
@@ -199,7 +191,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("query_value", "replacement_value"),
 		)
@@ -225,7 +216,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 
 		req, err := firstCmd(t, set).CreateRequest()
 
@@ -243,7 +233,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 		req, err := firstCmd(t, set).CreateRequest()
 
 		assert.NoError(t, err)
@@ -261,7 +250,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 		req, err := firstCmd(t, set).CreateRequest()
 
 		assert.NoError(t, err)
@@ -280,7 +268,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 
 		req, err := firstCmd(t, set).CreateRequest()
 
@@ -304,7 +291,6 @@ func Test_sources(t *testing.T) {
 				}},
 			}},
 		}
-		set.Prepare()
 
 		req, err := firstCmd(t, set).CreateRequest(fakeSource("the_arg", "replacement_value"))
 

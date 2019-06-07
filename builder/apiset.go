@@ -48,12 +48,6 @@ func joinUrlFragments(base, path string) string {
 	return base + path
 }
 
-func (set *APISet) Prepare() {
-	//for _, api := range set.APIs {
-	//	api.prepare()
-	//}
-}
-
 func (set *APISet) FindAPI(name string) ([]*API, error) {
 
 	var list []*API
@@ -86,9 +80,3 @@ func (api *API) FindCommand(name string) ([]*Command, error) {
 	}
 	return list, err
 }
-
-//func (api *API) prepare() {
-//	for i := range api.Commands {
-//		api.Commands[i].API = api
-//	}
-//}

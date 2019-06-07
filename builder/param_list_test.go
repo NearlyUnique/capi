@@ -25,7 +25,6 @@ func Test_all_components_are_listed(t *testing.T) {
 			}},
 		}},
 	}
-	set.Prepare()
 	api, err := set.FindAPI("an_api")
 	require.NoError(t, err)
 	cmd, err := api[0].FindCommand("a_cmd")
@@ -54,7 +53,6 @@ func Test_a_parameter_should_only_appear_once(t *testing.T) {
 			}},
 		}},
 	}
-	set.Prepare()
 	api, err := set.FindAPI("an_api")
 	require.NoError(t, err)
 	cmd, err := api[0].FindCommand("a_cmd")
