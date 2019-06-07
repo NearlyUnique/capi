@@ -11,7 +11,6 @@ build: test
 
 test:
 	mkdir -p $(TEST_RESULTS)
-#	go get github.com/jstemmer/go-junit-report
 	go test ./... -v -vet all | go-junit-report > $(TEST_RESULTS)/report.xml
 
 install:

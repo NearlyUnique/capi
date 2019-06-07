@@ -12,6 +12,7 @@ jobs:
 
     steps:
     - checkout
+    - run: go get github.com/jstemmer/go-junit-report
     - run: make
     - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
         path: $(TEST_RESULTS)
