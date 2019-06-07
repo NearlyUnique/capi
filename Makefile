@@ -11,11 +11,15 @@ build: test
 
 test:
 	mkdir -p $(TEST_RESULTS)
-	go get github.com/jstemmer/go-junit-report
+#	go get github.com/jstemmer/go-junit-report
 	go test ./... -v -vet all | go-junit-report > $(TEST_RESULTS)/report.xml
 
 install:
-	echo complete -C ./capi capi
+	# complete  : tool name
+	# -C        : this is a command
+	# capi      : custom complete tool
+	# capi      : name of the target tool (to match on the cli)
+	echo complete -C capi capi
 
 tail:
 	rm -f complete.log
