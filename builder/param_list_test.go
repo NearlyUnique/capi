@@ -3,12 +3,14 @@ package builder_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/NearlyUnique/capi/builder"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_all_components_are_listed(t *testing.T) {
-	p := builder.APISet{
+	set := builder.APISet{
 		APIs: []builder.API{{
 			Name:    "an_api",
 			BaseURL: "{base_url_value}",
@@ -23,8 +25,13 @@ func Test_all_components_are_listed(t *testing.T) {
 			}},
 		}},
 	}
-	p.Prepare()
-	actual := builder.ListParams(&p.APIs[0].Commands[0])
+	set.Prepare()
+	api, err := set.FindAPI("an_api")
+	require.NoError(t, err)
+	cmd, err := api[0].FindCommand("a_cmd")
+	require.NoError(t, err)
+
+	actual := builder.ListParams(cmd[0])
 
 	assert.Equal(t, 7, len(actual))
 	assert.Contains(t, actual, "base_url_value")
@@ -37,7 +44,7 @@ func Test_all_components_are_listed(t *testing.T) {
 }
 
 func Test_a_parameter_should_only_appear_once(t *testing.T) {
-	p := builder.APISet{
+	set := builder.APISet{
 		APIs: []builder.API{{
 			Name:    "an_api",
 			BaseURL: "{some_param}",
@@ -47,8 +54,13 @@ func Test_a_parameter_should_only_appear_once(t *testing.T) {
 			}},
 		}},
 	}
-	p.Prepare()
-	actual := builder.ListParams(&p.APIs[0].Commands[0])
+	set.Prepare()
+	api, err := set.FindAPI("an_api")
+	require.NoError(t, err)
+	cmd, err := api[0].FindCommand("a_cmd")
+	require.NoError(t, err)
+
+	actual := builder.ListParams(cmd[0])
 
 	assert.Equal(t, 1, len(actual))
 	assert.Contains(t, actual, "some_param")

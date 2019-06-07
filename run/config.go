@@ -15,18 +15,19 @@ func indexOrEmpty(args []string, i int) string {
 }
 
 type (
-	FileReader   func(filename string) ([]byte, error)
+	FileReader func(filename string) ([]byte, error)
+	// FormatReader can convert bytes to an APISet
+	FormatReader func(content []byte) (*builder.APISet, error)
+	// ConfigLoader find a config and load it
 	ConfigLoader struct {
 		formats map[string]FormatReader
 		home    string
 		reader  FileReader
 	}
-	RawConfig struct {
+	rawConfig struct {
 		Format string
 		Data   []byte
 	}
-	// FormatReader can convert bytes to an APISet
-	FormatReader func(content []byte) (*builder.APISet, error)
 )
 
 // NewConfigLoader
@@ -52,7 +53,7 @@ func (loader ConfigLoader) Load(filename string) (*builder.APISet, error) {
 
 // LoadRaw using filename, with extn json|xml|yaml or blank
 // if blank, then look for file called apiset with the same file extns
-func (loader ConfigLoader) LoadRaw(filename string) (*RawConfig, error) {
+func (loader ConfigLoader) LoadRaw(filename string) (*rawConfig, error) {
 	const defaultConfigFile = "apiset"
 	if len(loader.formats) == 0 {
 		return nil, builder.InvalidOperation("no formats registered")
@@ -75,7 +76,7 @@ func (loader ConfigLoader) LoadRaw(filename string) (*RawConfig, error) {
 		return nil, xerrors.New("no config found")
 	}
 
-	return &RawConfig{Format: extn, Data: buf}, nil
+	return &rawConfig{Format: extn, Data: buf}, nil
 }
 
 func (loader ConfigLoader) tryOpen(filename string) (string, []byte) {

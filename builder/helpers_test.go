@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/NearlyUnique/capi/builder"
 )
 
@@ -28,4 +30,14 @@ func assertEndsWith(t *testing.T, expected, actual string) {
 	if !strings.HasSuffix(actual, expected) {
 		t.Errorf("'%s' does not end with '%s'", actual, expected)
 	}
+}
+
+func firstCmd(t *testing.T, set builder.APISet) *builder.Command {
+	require.True(t, len(set.APIs) > 0)
+	api, err := set.FindAPI(set.APIs[0].Name)
+	require.NoError(t, err)
+	require.True(t, len(api[0].Commands) > 0)
+	cmd, err := api[0].FindCommand(api[0].Commands[0].Name)
+	require.NoError(t, err)
+	return cmd[0]
 }

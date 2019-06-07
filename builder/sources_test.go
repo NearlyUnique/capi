@@ -14,24 +14,12 @@ func Test_sources(t *testing.T) {
 	t.Run("base url parameters are replaced", func(t *testing.T) {
 		set := builder.APISet{
 			APIs: []builder.API{{
-				Name: "api", BaseURL: "http://example.com",
-				Commands: []builder.Command{{Name: "command"}},
-			}},
-		}
-		req, err := set.APIs[0].Commands[0].CreateRequest()
-
-		require.Error(t, err)
-		assert.Nil(t, req)
-	})
-	t.Run("base url parameters are replaced", func(t *testing.T) {
-		set := builder.APISet{
-			APIs: []builder.API{{
 				Name: "the_name", BaseURL: "{some_url}",
 				Commands: []builder.Command{{Name: "anyName"}},
 			}},
 		}
 		set.Prepare()
-		req, err := set.APIs[0].Commands[0].CreateRequest(
+		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("some_url", "http://example.com"),
 		)
 
@@ -50,7 +38,7 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := set.APIs[0].Commands[0].CreateRequest(
+		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("arg1", "value_one"),
 		)
 
@@ -72,7 +60,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := set.APIs[0].Commands[0].CreateRequest(
+		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("some_url", "https://example.com"),
 			fakeSource("arg1", "value_one"),
 		)
@@ -94,7 +82,7 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := set.APIs[0].Commands[0].CreateRequest(
+		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("some_header", "some_value"),
 		)
 
@@ -120,7 +108,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := set.APIs[0].Commands[0].CreateRequest(
+		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("command_header", "cmd_header_value"),
 		)
 
@@ -147,7 +135,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := set.APIs[0].Commands[0].CreateRequest(
+		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("command_override", "from_source"),
 		)
 
@@ -167,7 +155,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := set.APIs[0].Commands[0].CreateRequest(
+		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("some_arg", "arg_value"),
 		)
 
@@ -191,7 +179,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := set.APIs[0].Commands[0].CreateRequest()
+		req, err := firstCmd(t, set).CreateRequest()
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)
@@ -212,7 +200,7 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := set.APIs[0].Commands[0].CreateRequest(
+		req, err := firstCmd(t, set).CreateRequest(
 			fakeSource("query_value", "replacement_value"),
 		)
 
@@ -239,7 +227,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := set.APIs[0].Commands[0].CreateRequest()
+		req, err := firstCmd(t, set).CreateRequest()
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)
@@ -256,7 +244,7 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := set.APIs[0].Commands[0].CreateRequest()
+		req, err := firstCmd(t, set).CreateRequest()
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)
@@ -274,7 +262,7 @@ func Test_sources(t *testing.T) {
 			}},
 		}
 		set.Prepare()
-		req, err := set.APIs[0].Commands[0].CreateRequest()
+		req, err := firstCmd(t, set).CreateRequest()
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)
@@ -294,7 +282,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := set.APIs[0].Commands[0].CreateRequest()
+		req, err := firstCmd(t, set).CreateRequest()
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)
@@ -318,7 +306,7 @@ func Test_sources(t *testing.T) {
 		}
 		set.Prepare()
 
-		req, err := set.APIs[0].Commands[0].CreateRequest(fakeSource("the_arg", "replacement_value"))
+		req, err := firstCmd(t, set).CreateRequest(fakeSource("the_arg", "replacement_value"))
 
 		assert.NoError(t, err)
 		require.NotNil(t, req)

@@ -49,9 +49,9 @@ func joinUrlFragments(base, path string) string {
 }
 
 func (set *APISet) Prepare() {
-	for _, api := range set.APIs {
-		api.prepare()
-	}
+	//for _, api := range set.APIs {
+	//	api.prepare()
+	//}
 }
 
 func (set *APISet) FindAPI(name string) ([]*API, error) {
@@ -62,7 +62,9 @@ func (set *APISet) FindAPI(name string) ([]*API, error) {
 	for i := range set.APIs {
 		//todo: can we do this WITHOUT the extra allocation?
 		if strings.Contains(strings.ToLower(set.APIs[i].Name), lowerName) {
-			list = append(list, &set.APIs[i])
+			api := &set.APIs[i]
+			api.Set = set
+			list = append(list, api)
 			err = nil
 		}
 	}
@@ -76,15 +78,17 @@ func (api *API) FindCommand(name string) ([]*Command, error) {
 	for i := range api.Commands {
 		//todo: can we do this WITHOUT the extra allocation?
 		if strings.Contains(strings.ToLower(api.Commands[i].Name), lowerName) {
-			list = append(list, &api.Commands[i])
+			cmd := &api.Commands[i]
+			cmd.API = api
+			list = append(list, cmd)
 			err = nil
 		}
 	}
 	return list, err
 }
 
-func (api *API) prepare() {
-	for i := range api.Commands {
-		api.Commands[i].API = api
-	}
-}
+//func (api *API) prepare() {
+//	for i := range api.Commands {
+//		api.Commands[i].API = api
+//	}
+//}

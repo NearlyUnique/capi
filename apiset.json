@@ -9,7 +9,7 @@
       },
       "commands": [
         {
-          "name": "get",
+          "name": "read",
           "path": "/anything/{value}"
         },
         {

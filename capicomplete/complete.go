@@ -51,9 +51,11 @@ func GenerateResponse(ac *autocomplete.Params, apis *builder.APISet) []string {
 		if len(api) != 1 {
 			return []string{"error", fmt.Sprintf("API '%s' ambiguous", apiName)}
 		}
-		// we guess the first one is ok
-		for _, cmd := range api[0].Commands {
-			// filter
+		cmds, err := api[0].FindCommand(ac.Word)
+		if err != nil {
+			return []string{"error", err.Error()}
+		}
+		for _, cmd := range cmds {
 			if strings.HasPrefix(cmd.Name, ac.Word) {
 				//always store simple answer just in case
 				filtered = append(filtered, cmd.Name)

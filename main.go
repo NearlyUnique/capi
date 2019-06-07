@@ -16,6 +16,10 @@ func main() {
 	homeDir, _ := os.UserHomeDir() // if can't read home folder , just carry on, might still work
 	loader := run.NewConfigLoader(homeDir, ioutil.ReadFile)
 
+	if run.AutoComplete(loader, os.Args, os.Environ()) {
+		return
+	}
+
 	err := run.Main(loader, os.Args, os.Environ())
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error loading configuration: %v", err)

@@ -10,6 +10,12 @@ func ListParams(cmd *Command) []string {
 			list = append(list, v)
 		}
 	}
+	if cmd == nil {
+		panic("cmd == nil")
+	}
+	if cmd.API == nil {
+		panic("cmd.API == nil")
+	}
 
 	searchIn := []string{
 		cmd.API.BaseURL,
