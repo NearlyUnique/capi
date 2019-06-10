@@ -29,7 +29,7 @@ export COMP_KEY=%v
 export COMP_TYPE=%v
 
 # IDE env settings
-# COMP_LINE=%[1]v;COMP_POINT=%[2]v;COMP_KEY=%[3]v;COMP_TYPE=%[4]v
+# COMP_LINE=%[1]v;COMP_POINT=%[2]v;COMP_KEY=%[3]v;COMP_TYPE=%[4]v;
 
 # Command Word PreWord
 %s %s %s
