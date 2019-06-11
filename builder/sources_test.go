@@ -71,7 +71,7 @@ func Test_sources(t *testing.T) {
 			APIs: []builder.API{{
 				Name:    "the_name",
 				BaseURL: "http://any.org",
-				Header: map[string][]string{
+				Header: map[string]builder.StringOrList{
 					"h1": {"hv1a", "hv1b"},
 					"h2": {"{some_header}"},
 				},
@@ -96,7 +96,7 @@ func Test_sources(t *testing.T) {
 				BaseURL: "http://any.org",
 				Commands: []builder.Command{{
 					Name: "anyName",
-					Header: map[string][]string{
+					Header: map[string]builder.StringOrList{
 						"h3": {"{command_header}"},
 					},
 				}},
@@ -117,12 +117,12 @@ func Test_sources(t *testing.T) {
 			APIs: []builder.API{{
 				Name:    "the_name",
 				BaseURL: "http://any.org",
-				Header: map[string][]string{
+				Header: map[string]builder.StringOrList{
 					"h4": {"default_value"},
 				},
 				Commands: []builder.Command{{
 					Name: "anyName",
-					Header: map[string][]string{
+					Header: map[string]builder.StringOrList{
 						"h4": {"overridden {command_override}"},
 					},
 				}},
@@ -143,7 +143,7 @@ func Test_sources(t *testing.T) {
 			APIs: []builder.API{{
 				Name:     "the_name",
 				BaseURL:  "{some_url}",
-				Query:    map[string][]string{"anyKey": {"{some_arg}"}},
+				Query:    map[string]builder.StringOrList{"anyKey": {"{some_arg}"}},
 				Commands: []builder.Command{{Name: "anyName"}},
 			}},
 		}
@@ -164,7 +164,7 @@ func Test_sources(t *testing.T) {
 				BaseURL: "http://any.org",
 				Commands: []builder.Command{{
 					Name: "anyName",
-					Query: map[string][]string{
+					Query: map[string]builder.StringOrList{
 						"simple": {"a_value"},
 					},
 				}},
@@ -185,7 +185,7 @@ func Test_sources(t *testing.T) {
 				BaseURL: "http://any.org",
 				Commands: []builder.Command{{
 					Name: "anyName",
-					Query: map[string][]string{
+					Query: map[string]builder.StringOrList{
 						"q3": {"{query_value}"},
 					},
 				}},
@@ -205,12 +205,12 @@ func Test_sources(t *testing.T) {
 			APIs: []builder.API{{
 				Name:    "the_name",
 				BaseURL: "http://any.org",
-				Query: map[string][]string{
+				Query: map[string]builder.StringOrList{
 					"q": {"api_value"},
 				},
 				Commands: []builder.Command{{
 					Name: "anyName",
-					Query: map[string][]string{
+					Query: map[string]builder.StringOrList{
 						"q": {"command_value"},
 					},
 				}},

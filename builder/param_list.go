@@ -22,7 +22,7 @@ func ListParams(cmd *Command) []string {
 		cmd.Path,
 		cmd.Body.String(),
 	}
-	headers := []map[string][]string{
+	headers := []map[string]StringOrList{
 		cmd.Query,
 		cmd.Header,
 		cmd.API.Query,

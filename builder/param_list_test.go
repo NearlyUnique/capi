@@ -14,13 +14,13 @@ func Test_all_components_are_listed(t *testing.T) {
 		APIs: []builder.API{{
 			Name:    "an_api",
 			BaseURL: "{base_url_value}",
-			Header:  map[string][]string{"api_header": {"{api_header_value}"}},
-			Query:   map[string][]string{"api_query": {"{api_query_value}"}},
+			Header:  map[string]builder.StringOrList{"api_header": {"{api_header_value}"}},
+			Query:   map[string]builder.StringOrList{"api_query": {"{api_query_value}"}},
 			Commands: []builder.Command{{
 				Name:   "a_cmd",
 				Path:   "/one/{path_value}",
-				Header: map[string][]string{"header1": {"{header_value}"}},
-				Query:  map[string][]string{"query1": {"{query_value}"}},
+				Header: map[string]builder.StringOrList{"header1": {"{header_value}"}},
+				Query:  map[string]builder.StringOrList{"query1": {"{query_value}"}},
 				Body:   &builder.CommandBody{Data: []byte(`"{body_value}"`)},
 			}},
 		}},

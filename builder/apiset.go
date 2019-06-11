@@ -13,8 +13,8 @@ type (
 	API struct {
 		Name     string
 		BaseURL  string
-		Header   map[string][]string
-		Query    map[string][]string
+		Header   map[string]StringOrList //[]string
+		Query    map[string]StringOrList //[]string
 		Commands []Command
 		Set      *APISet
 	}
@@ -23,8 +23,8 @@ type (
 		Name   string
 		Path   string
 		Method string
-		Header map[string][]string
-		Query  map[string][]string
+		Header map[string]StringOrList //[]string
+		Query  map[string]StringOrList //[]string
 		Body   *CommandBody
 		API    *API
 	}

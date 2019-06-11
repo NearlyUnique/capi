@@ -68,3 +68,30 @@ func Test_commandBody_stringer_return_empty_string_if_data_is_nil(t *testing.T) 
 	cmd := &builder.CommandBody{}
 	assert.Equal(t, "", cmd.String())
 }
+
+func Test_value_can_be_single_string(t *testing.T) {
+	body := `{"item": "one_string"}`
+
+	var act struct {
+		Item builder.StringOrList
+	}
+	err := json.Unmarshal([]byte(body), &act)
+
+	require.NoError(t, err)
+	require.Equal(t, 1, len(act.Item))
+	assert.Equal(t, "one_string", string(act.Item[0]))
+}
+
+func Test_value_can_be_list_of_strings_string(t *testing.T) {
+	body := `{"item": ["first", "second"]}`
+
+	var act struct {
+		Item builder.StringOrList
+	}
+	err := json.Unmarshal([]byte(body), &act)
+
+	require.NoError(t, err)
+	require.Equal(t, 2, len(act.Item))
+	assert.Contains(t, act.Item, "first")
+	assert.Contains(t, act.Item, "second")
+}

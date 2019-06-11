@@ -17,7 +17,7 @@ func Test_http_request_can_be_made(t *testing.T) {
 			{
 				Name:    "an_api",
 				BaseURL: "https://postman-echo.com",
-				Header: map[string][]string{
+				Header: map[string]builder.StringOrList{
 					"any-default-header":  {"default value"},
 					"default-header-key":  {"before {any-arg} after"},
 					"overwritten-default": {"-overwrite-this-"},
@@ -27,13 +27,13 @@ func Test_http_request_can_be_made(t *testing.T) {
 						Name:   "api_cmd",
 						Path:   "/post",
 						Method: "POST",
-						Header: map[string][]string{
+						Header: map[string]builder.StringOrList{
 							"content-type": {"application/json"},
 						},
 					}, {
 						Name: "api_cmd_args",
 						Path: "/sub/{v1}/path/{v2}",
-						Header: map[string][]string{
+						Header: map[string]builder.StringOrList{
 							"command-header-key":  {"{any-arg}"},
 							"overwritten-default": {"overwritten: {any-arg}"},
 						},

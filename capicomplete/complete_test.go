@@ -85,8 +85,8 @@ func Test_all_params_are_listed_with_double_dash_prefix(t *testing.T) {
 				Commands: []builder.Command{{
 					Name:   "a_cmd",
 					Path:   "/one/{path_value}",
-					Header: map[string][]string{"header1": {"{header_value}"}},
-					Query:  map[string][]string{"query1": {"{query_value}"}},
+					Header: map[string]builder.StringOrList{"header1": {"{header_value}"}},
+					Query:  map[string]builder.StringOrList{"query1": {"{query_value}"}},
 					Body:   &builder.CommandBody{Data: []byte(`"{body_value}"`)},
 				}},
 			}},

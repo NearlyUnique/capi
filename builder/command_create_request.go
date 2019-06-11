@@ -73,7 +73,7 @@ func (cmd Command) CreateRequest(sources ...SourceFn) (*http.Request, error) {
 	return req, nil
 }
 
-func applyToHeaders(headers map[string][]string, req *http.Request, apply func(v string) string) {
+func applyToHeaders(headers map[string]StringOrList, req *http.Request, apply func(v string) string) {
 	for k, v := range headers {
 		req.Header.Del(k)
 		for _, item := range v {

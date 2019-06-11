@@ -1,5 +1,10 @@
 package builder
 
+import (
+	"encoding/json"
+	"strings"
+)
+
 type CommandBody struct {
 	Data []byte
 }
@@ -18,4 +23,24 @@ func (body *CommandBody) String() string {
 		return ""
 	}
 	return string(body.Data)
+}
+
+type StringOrList []string
+
+func (s *StringOrList) UnmarshalJSON(data []byte) error {
+	l := len(data)
+	if l >= 2 && data[0] == '"' && data[l-1] == '"' {
+		x := []string{string(data[1 : l-1])}
+		xs := StringOrList(x)
+		*s = xs
+		return nil
+	}
+	list := []string(*s)
+	err := json.Unmarshal(data, &list)
+	*s = list
+	return err
+}
+
+func (s StringOrList) String() string {
+	return strings.Join([]string(s), ",")
 }
