@@ -9,11 +9,13 @@ import (
 	"github.com/NearlyUnique/capi/autocomplete"
 	"github.com/NearlyUnique/capi/builder"
 	"github.com/NearlyUnique/capi/capicomplete"
+	"github.com/NearlyUnique/capi/postman"
 )
 
 //Main entry point
 func Main(loader ConfigLoader, args, env []string) error {
 	loader.RegisterFileExtension(".json", JSONFormatReader)
+	loader.RegisterFileExtension(".postman_collection.json", postman.FormatReader)
 	// find the config
 	firstArg := indexOrEmpty(args, 1)
 	set, err := loader.Load(firstArg)
@@ -50,6 +52,7 @@ func AutoComplete(loader ConfigLoader, args, env []string) bool {
 	// args are from complete, replace with the actual args that would run
 	args = strings.Split(ac.Line, " ")
 	loader.RegisterFileExtension(".json", JSONFormatReader)
+	loader.RegisterFileExtension(".postman_collection.json", postman.FormatReader)
 	// find the config
 	firstArg := indexOrEmpty(args, 1)
 	set, err := loader.Load(firstArg)

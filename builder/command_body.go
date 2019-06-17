@@ -2,7 +2,6 @@ package builder
 
 import (
 	"encoding/json"
-	"strings"
 )
 
 type CommandBody struct {
@@ -39,8 +38,4 @@ func (s *StringOrList) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &list)
 	*s = list
 	return err
-}
-
-func (s StringOrList) String() string {
-	return strings.Join([]string(s), ",")
 }

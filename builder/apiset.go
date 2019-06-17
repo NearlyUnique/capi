@@ -49,17 +49,25 @@ func joinUrlFragments(base, path string) string {
 }
 
 func (set *APISet) FindAPI(name string) ([]*API, error) {
-
 	var list []*API
 	var err error = NotFound(name)
-	lowerName := strings.ToLower(name)
-	for i := range set.APIs {
-		//todo: can we do this WITHOUT the extra allocation?
-		if strings.Contains(strings.ToLower(set.APIs[i].Name), lowerName) {
-			api := &set.APIs[i]
-			api.Set = set
-			list = append(list, api)
-			err = nil
+
+	if len(set.APIs) == 1 {
+		// we are here because a set was loaded
+		// therefore if there is only one API
+		// use it
+		list = []*API{&set.APIs[0]}
+		err = nil
+	} else {
+		lowerName := strings.ToLower(name)
+		for i := range set.APIs {
+			//todo: can we do this WITHOUT the extra allocation?
+			if strings.Contains(strings.ToLower(set.APIs[i].Name), lowerName) {
+				api := &set.APIs[i]
+				api.Set = set
+				list = append(list, api)
+				err = nil
+			}
 		}
 	}
 	return list, err

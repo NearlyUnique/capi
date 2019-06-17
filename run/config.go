@@ -43,25 +43,24 @@ func NewConfigLoader(home string, reader FileReader) ConfigLoader {
 func (loader ConfigLoader) RegisterFileExtension(extn string, reader FormatReader) {
 	loader.formats[extn] = reader
 }
+
 func (loader ConfigLoader) Load(filename string) (*builder.APISet, error) {
 	raw, err := loader.LoadRaw(filename)
 	if err != nil {
 		return nil, err
 	}
+
 	return loader.formats[raw.Format](raw.Data)
 }
 
 // LoadRaw using filename, with extn json|xml|yaml or blank
 // if blank, then look for file called apiset with the same file extns
 func (loader ConfigLoader) LoadRaw(filename string) (*rawConfig, error) {
-	const defaultConfigFile = "apiset"
 	if len(loader.formats) == 0 {
 		return nil, builder.InvalidOperation("no formats registered")
 	}
 	targets := []string{
-		defaultConfigFile,
 		filename,
-		path.Join(loader.home, defaultConfigFile),
 		path.Join(loader.home, filename),
 	}
 	var extn string
