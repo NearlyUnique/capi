@@ -20,6 +20,9 @@ func main() {
 		parts = append(parts, "")
 	}
 	p := autocomplete.Mock(parts[0], parts[1])
+	if p.Word == "" {
+		p.Word = `""`
+	}
 
 	fmt.Printf(`
 # Required env vars

@@ -46,6 +46,8 @@ func Parse(args []string, envRaw []string) *Params {
 		indexWord     = 2
 		indexPrevWord = 3
 	)
+	logArgs(args, envRaw)
+
 	var ac Params
 	if len(args) != 4 {
 		log("expected 4 args, got %v", args)
@@ -68,6 +70,20 @@ func Parse(args []string, envRaw []string) *Params {
 	}
 
 	return &ac
+}
+
+func logArgs(args, envRaw []string) {
+	log("args:")
+	for i, v := range args {
+		log("%d:'%s',", i, v)
+	}
+	log("\nenv:")
+	for _, v := range envRaw {
+		if strings.HasPrefix(v, "COMP_") {
+			log("%s;", v)
+		}
+	}
+	log("\n")
 }
 
 //WordIndex for the word under the cursor

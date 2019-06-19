@@ -4,9 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/NearlyUnique/capi/builder"
+	"github.com/stretchr/testify/require"
 )
 
 func fakeSource(k, s string) builder.SourceFn {

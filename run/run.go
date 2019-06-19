@@ -2,20 +2,19 @@ package run
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"strings"
 
 	"github.com/NearlyUnique/capi/autocomplete"
 	"github.com/NearlyUnique/capi/builder"
 	"github.com/NearlyUnique/capi/capicomplete"
-	"github.com/NearlyUnique/capi/postman"
 )
 
-//Main entry point
+// Main entry point
 func Main(loader ConfigLoader, args, env []string) error {
-	loader.RegisterFileExtension(".json", JSONFormatReader)
-	loader.RegisterFileExtension(".postman_collection.json", postman.FormatReader)
 	// find the config
 	firstArg := indexOrEmpty(args, 1)
 	set, err := loader.Load(firstArg)
@@ -42,31 +41,45 @@ func Main(loader ConfigLoader, args, env []string) error {
 	return nil
 }
 
-func AutoComplete(loader ConfigLoader, args, env []string) bool {
+// AutoComplete entry point
+func AutoComplete(loader ConfigLoader, args, env []string) []string {
+	enableLogging(env)
 	ac := autocomplete.Parse(args, env)
 
 	if ac == nil {
 		// ok, no complete work to perform
-		return false
+		return nil
 	}
 	// args are from complete, replace with the actual args that would run
 	args = strings.Split(ac.Line, " ")
-	loader.RegisterFileExtension(".json", JSONFormatReader)
-	loader.RegisterFileExtension(".postman_collection.json", postman.FormatReader)
 	// find the config
 	firstArg := indexOrEmpty(args, 1)
 	set, err := loader.Load(firstArg)
 	if err != nil {
-		// log?
-		return false
+		return loader.List(firstArg)
 	}
 
-	options := capicomplete.GenerateResponse(ac, set)
-	if len(options) > 0 {
-		for _, opt := range options {
-			fmt.Println(opt)
+	return capicomplete.GenerateResponse(ac, set)
+}
+
+// enableLogging is performed if CAPI_DEBUG has any value
+func enableLogging(env []string) {
+	for _, v := range env {
+		if strings.HasPrefix(v, "CAPI_DEBUG") {
+			f, err := os.Create("capi.log")
+			if err != nil {
+				autocomplete.LogHook = log.Printf
+			} else {
+				autocomplete.LogHook = func(format string, args ...interface{}) {
+					_, _ = fmt.Fprintf(f, format, args...)
+				}
+			}
+			return
 		}
 	}
+}
 
-	return true
+type ConfigLoader interface {
+	List(search string) []string
+	Load(filename string) (*builder.APISet, error)
 }
