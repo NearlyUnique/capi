@@ -21,8 +21,8 @@ type (
 	FileReader func(filename string) ([]byte, error)
 	// FormatReader can convert bytes to an APISet
 	FormatReader func(content []byte) (*builder.APISet, error)
-	// configLoader find a config and load it
-	configLoader struct {
+	// ConfigLoader find a config and load it
+	ConfigLoader struct {
 		formats map[string]FormatReader
 		home    string
 		reader  FileReader
@@ -35,7 +35,7 @@ type (
 
 // NewConfigLoader
 func NewConfigLoader(home string, reader FileReader) ConfigLoader {
-	loader := configLoader{
+	loader := ConfigLoader{
 		reader:  reader,
 		formats: make(map[string]FormatReader),
 		home:    home,
@@ -43,11 +43,11 @@ func NewConfigLoader(home string, reader FileReader) ConfigLoader {
 	return loader
 }
 
-func (loader configLoader) RegisterFileExtension(extn string, reader FormatReader) {
+func (loader ConfigLoader) RegisterFileExtension(extn string, reader FormatReader) {
 	loader.formats[extn] = reader
 }
 
-func (loader configLoader) Load(filename string) (*builder.APISet, error) {
+func (loader ConfigLoader) Load(filename string) (*builder.APISet, error) {
 	raw, err := loader.LoadRaw(filename)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (loader configLoader) Load(filename string) (*builder.APISet, error) {
 
 // LoadRaw using filename, with extn json|xml|yaml or blank
 // if blank, then look for file called apiset with the same file extns
-func (loader configLoader) LoadRaw(filename string) (*rawConfig, error) {
+func (loader ConfigLoader) LoadRaw(filename string) (*rawConfig, error) {
 	if len(loader.formats) == 0 {
 		return nil, builder.InvalidOperation("no formats registered")
 	}
@@ -81,7 +81,7 @@ func (loader configLoader) LoadRaw(filename string) (*rawConfig, error) {
 	return &rawConfig{Format: extn, Data: buf}, nil
 }
 
-func (loader configLoader) List(search string) []string {
+func (loader ConfigLoader) List(search string) []string {
 	var keys []string
 	for k := range loader.formats {
 		keys = append(keys, k)
@@ -129,7 +129,7 @@ func osReadDir(root, search string, extns []string) ([]string, error) {
 
 	return files, nil
 }
-func (loader configLoader) tryOpen(filename string) (string, []byte) {
+func (loader ConfigLoader) tryOpen(filename string) (string, []byte) {
 	if filename == "" {
 		return "", nil
 	}

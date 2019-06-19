@@ -14,7 +14,7 @@ import (
 )
 
 // Main entry point
-func Main(loader ConfigLoader, args, env []string) error {
+func Main(loader LoadLister, args, env []string) error {
 	// find the config
 	firstArg := indexOrEmpty(args, 1)
 	set, err := loader.Load(firstArg)
@@ -42,7 +42,7 @@ func Main(loader ConfigLoader, args, env []string) error {
 }
 
 // AutoComplete entry point
-func AutoComplete(loader ConfigLoader, args, env []string) []string {
+func AutoComplete(loader LoadLister, args, env []string) []string {
 	enableLogging(env)
 	ac := autocomplete.Parse(args, env)
 
@@ -79,7 +79,7 @@ func enableLogging(env []string) {
 	}
 }
 
-type ConfigLoader interface {
+type LoadLister interface {
 	List(search string) []string
 	Load(filename string) (*builder.APISet, error)
 }
