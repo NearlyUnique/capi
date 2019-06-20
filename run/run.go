@@ -13,8 +13,13 @@ import (
 	"github.com/NearlyUnique/capi/capicomplete"
 )
 
+type LoadLister interface {
+	List(search string) []string
+	Load(filename string) (*builder.APISet, error)
+}
+
 // Main entry point
-func Main(loader LoadLister, args, env []string) error {
+func Main(loader LoadLister, args []string, sources ...builder.SourceFn) error {
 	// find the config
 	firstArg := indexOrEmpty(args, 1)
 	set, err := loader.Load(firstArg)
@@ -25,8 +30,7 @@ func Main(loader LoadLister, args, env []string) error {
 	req, err := set.CreateRequest(
 		firstArg,
 		indexOrEmpty(args, 2),
-		builder.NewFlagSource(args, nil),
-		builder.NewEnvVarsSource(env),
+		sources...,
 	)
 
 	if err != nil {
@@ -77,9 +81,4 @@ func enableLogging(env []string) {
 			return
 		}
 	}
-}
-
-type LoadLister interface {
-	List(search string) []string
-	Load(filename string) (*builder.APISet, error)
 }

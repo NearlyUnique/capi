@@ -87,6 +87,9 @@ var rxMustacheParams = regexp.MustCompile(`{(?P<Name>[a-zA-Z0-9-_]+)}`)
 func applyReplacement(source string, sources []SourceFn) string {
 	return replaceAllStringSubmatchFunc(rxMustacheParams, source, func(args []string) string {
 		for _, srcFn := range sources {
+			if srcFn == nil {
+				continue
+			}
 			if v := srcFn(args[1]); v != "" {
 				return v
 			}

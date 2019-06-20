@@ -9,9 +9,9 @@ import (
 )
 
 type (
-	// PostmanValue represents the complex types from postman data, not all values are completed
+	// Value represents the complex types from postman data, not all values are completed
 	// in all cases
-	PostmanValue struct {
+	Value struct {
 		Key   string
 		Value string
 		Name  string
@@ -24,7 +24,7 @@ type (
 	}
 	Auth struct {
 		Type   string
-		Bearer []PostmanValue
+		Bearer []Value
 	}
 	Body struct {
 		Mode string
@@ -35,13 +35,13 @@ type (
 		Protocol string
 		Host     []string
 		Path     []string
-		Query    []PostmanValue
+		Query    []Value
 	}
 	Request struct {
 		Description string
 		Auth        Auth
 		Method      string
-		Header      []PostmanValue
+		Header      []Value
 		Body        Body
 		URL         URL
 	}
@@ -57,8 +57,8 @@ type (
 		//	}
 		//}
 	}
-	//Config from a postman file
-	Config struct {
+	//ItemConfig from a postman file
+	ItemConfig struct {
 		Info Info
 		Item []Item
 	}
@@ -66,7 +66,7 @@ type (
 
 // FormatReader to read postman configuration and convert toocapi config
 func FormatReader(content []byte) (*builder.APISet, error) {
-	var pm Config
+	var pm ItemConfig
 	err := json.Unmarshal(content, &pm)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func FormatReader(content []byte) (*builder.APISet, error) {
 }
 
 // ToAPISet to builder.APISet
-func (c Config) ToAPISet() (*builder.APISet, error) {
+func (c ItemConfig) ToAPISet() (*builder.APISet, error) {
 	set := builder.APISet{
 		APIs: []builder.API{
 			{Name: c.Info.Name},
@@ -103,7 +103,7 @@ func (c Config) ToAPISet() (*builder.APISet, error) {
 	return &set, nil
 }
 
-func postmanListToMap(item []PostmanValue, cmdMap map[string]builder.StringOrList) {
+func postmanListToMap(item []Value, cmdMap map[string]builder.StringOrList) {
 	for _, h := range item {
 		val := convertToCapiParameters(h.Value)
 		if _, ok := cmdMap[h.Key]; ok {

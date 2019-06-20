@@ -44,6 +44,25 @@ func Test_sources(t *testing.T) {
 		require.NotNil(t, req)
 		assertEndsWith(t, "/any/value_one", req.URL.String())
 	})
+	t.Run("if a source is a nil func it is ignored", func(t *testing.T) {
+		set := builder.APISet{
+			APIs: []builder.API{{
+				Name: "the_name", BaseURL: "http://any.org",
+				Commands: []builder.Command{{
+					Name: "anyName",
+					Path: "/any/{arg1}",
+				}},
+			}},
+		}
+		req, err := firstCmd(t, set).CreateRequest(
+			nil,
+			fakeSource("arg1", "value_one"),
+		)
+
+		assert.NoError(t, err)
+		require.NotNil(t, req)
+		assertEndsWith(t, "/any/value_one", req.URL.String())
+	})
 	t.Run("all url parameters are replaced", func(t *testing.T) {
 		set := builder.APISet{
 			APIs: []builder.API{{

@@ -9,7 +9,7 @@ import (
 )
 
 func Test_APISet_basic_property_values(t *testing.T) {
-	pm := Config{
+	pm := ItemConfig{
 		Info: Info{Name: "api-name"},
 		Item: []Item{
 			{
@@ -17,13 +17,13 @@ func Test_APISet_basic_property_values(t *testing.T) {
 				Request: Request{
 					URL: URL{
 						Raw: "some-url?a-query1=a-query-value1&a-query2=a-query-value2",
-						Query: []PostmanValue{
+						Query: []Value{
 							{Key: "a-query1", Value: "a-query-value1"},
 							{Key: "a-query2", Value: "a-query-value2"},
 						},
 					},
 					Method: "a-method",
-					Header: []PostmanValue{
+					Header: []Value{
 						{Key: "a-header1", Value: "a-header-value1"},
 						{Key: "a-header2", Value: "a-header-value2"},
 					},
@@ -83,15 +83,15 @@ func Test_APISet_basic_property_values(t *testing.T) {
 }
 
 func Test_when_a_map_key_is_duplicated_in_postman_it_will_also_duplicated_in_APISet(t *testing.T) {
-	pm := Config{
+	pm := ItemConfig{
 		Item: []Item{{
 			Request: Request{
-				Header: []PostmanValue{
+				Header: []Value{
 					{Key: "a-duplicate-h", Value: "a-header-value1"},
 					{Key: "a-duplicate-h", Value: "a-header-value2"},
 				},
 				URL: URL{
-					Query: []PostmanValue{
+					Query: []Value{
 						{Key: "a-duplicate-q", Value: "a-query-value1"},
 						{Key: "a-duplicate-q", Value: "a-query-value2"},
 					},
@@ -122,15 +122,15 @@ func Test_when_a_map_key_is_duplicated_in_postman_it_will_also_duplicated_in_API
 	})
 }
 func Test_postman_variables_are_converted_to_capi_variables(t *testing.T) {
-	pm := Config{
+	pm := ItemConfig{
 		Item: []Item{
 			{
 				Request: Request{
 					URL: URL{
 						Raw:   "{{a-url}}",
-						Query: []PostmanValue{{Key: "a-query", Value: "{{a-query-value}}"}},
+						Query: []Value{{Key: "a-query", Value: "{{a-query-value}}"}},
 					},
-					Header: []PostmanValue{{Key: "a-header", Value: "{{a-header-value}}"}},
+					Header: []Value{{Key: "a-header", Value: "{{a-header-value}}"}},
 					Body: Body{
 						Raw: `["{{attrib-value}}"]`,
 					},
@@ -149,7 +149,7 @@ func Test_postman_variables_are_converted_to_capi_variables(t *testing.T) {
 }
 
 func Test_spaces_in_command_names_are_replaced_with_underscore(t *testing.T) {
-	pm := Config{
+	pm := ItemConfig{
 		Item: []Item{{
 			Name: "name with spaces",
 		}},
