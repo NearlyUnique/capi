@@ -1,11 +1,10 @@
 package run
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httputil"
-	"os"
 	"strings"
 
 	"github.com/NearlyUnique/capi/autocomplete"
@@ -40,14 +39,17 @@ func Main(loader LoadLister, args []string, sources ...builder.SourceFn) error {
 	if err != nil {
 		return err
 	}
-	buf, _ := httputil.DumpResponse(resp, true)
+	buf, err := json.Marshal(resp)
+	if err != nil {
+		buf, _ = httputil.DumpResponse(resp, true)
+	}
 	fmt.Print(string(buf))
+
 	return nil
 }
 
 // AutoComplete entry point
 func AutoComplete(loader LoadLister, args, env []string) []string {
-	enableLogging(env)
 	ac := autocomplete.Parse(args, env)
 
 	if ac == nil {
@@ -64,21 +66,4 @@ func AutoComplete(loader LoadLister, args, env []string) []string {
 	}
 
 	return capicomplete.GenerateResponse(ac, set)
-}
-
-// enableLogging is performed if CAPI_DEBUG has any value
-func enableLogging(env []string) {
-	for _, v := range env {
-		if strings.HasPrefix(v, "CAPI_DEBUG") {
-			f, err := os.Create("capi.log")
-			if err != nil {
-				autocomplete.LogHook = log.Printf
-			} else {
-				autocomplete.LogHook = func(format string, args ...interface{}) {
-					_, _ = fmt.Fprintf(f, format, args...)
-				}
-			}
-			return
-		}
-	}
 }

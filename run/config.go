@@ -10,14 +10,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func indexOrEmpty(args []string, i int) string {
-	if i < 0 || i >= len(args) {
-		return ""
-	}
-	return args[i]
-}
-
 type (
+	//FileReader interface to arbitrary file reader
 	FileReader func(filename string) ([]byte, error)
 	// FormatReader can convert bytes to an APISet
 	FormatReader func(content []byte) (*builder.APISet, error)
@@ -108,15 +102,14 @@ func osReadDir(root, search string, extns []string) ([]string, error) {
 	if err != nil {
 		return files, err
 	}
-	// extns should be in LENGTH order
-	sort.SliceStable(extns, func(i, j int) bool { return len(extns[i]) > len(extns[j]) })
+
+	sort.SliceStable(extns, sortByLongestFirst(extns))
 
 	for _, file := range fileInfo {
 		if file.IsDir() {
 			continue
 		}
-		x, name := path.Split(file.Name())
-		_ = x
+		_, name := path.Split(file.Name())
 		if strings.HasPrefix(name, search) {
 			for _, extn := range extns {
 				if strings.HasSuffix(name, extn) {
@@ -129,6 +122,7 @@ func osReadDir(root, search string, extns []string) ([]string, error) {
 
 	return files, nil
 }
+
 func (loader ConfigLoader) tryOpen(filename string) (string, []byte) {
 	if filename == "" {
 		return "", nil
@@ -140,4 +134,15 @@ func (loader ConfigLoader) tryOpen(filename string) (string, []byte) {
 		}
 	}
 	return "", nil
+}
+
+func indexOrEmpty(args []string, i int) string {
+	if i < 0 || i >= len(args) {
+		return ""
+	}
+	return args[i]
+}
+
+func sortByLongestFirst(extns []string) func(i, j int) bool {
+	return func(i, j int) bool { return len(extns[i]) > len(extns[j]) }
 }

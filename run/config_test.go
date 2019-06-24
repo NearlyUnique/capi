@@ -115,10 +115,6 @@ func createTestFilesAndCleanUp(t *testing.T, filenames []string) func() {
 	}
 }
 
-func Test_what_happens_when_the_same_filename_is_used_for_two_extns(t *testing.T) {
-	t.Skip()
-}
-
 func Test_config_can_be_loaded_using_json_reader(t *testing.T) {
 	const noFilename = ""
 	const noHome = ""

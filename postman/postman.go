@@ -64,7 +64,7 @@ type (
 	}
 )
 
-// FormatReader to read postman configuration and convert toocapi config
+// FormatReader to read postman configuration and convert to capi config
 func FormatReader(content []byte) (*builder.APISet, error) {
 	var pm ItemConfig
 	err := json.Unmarshal(content, &pm)
