@@ -30,24 +30,6 @@ type (
 	}
 )
 
-func joinUrlFragments(base, path string) string {
-	if base == "" {
-		return path
-	}
-	if path == "" {
-		return base
-	}
-	b := base[len(base)-1] == '/'
-	p := path[0] == '/'
-	if !b && !p {
-		return base + "/" + path
-	}
-	if b && p {
-		return base + path[1:]
-	}
-	return base + path
-}
-
 func (set *APISet) FindAPI(name string) ([]*API, error) {
 	var list []*API
 	var err error = NotFound(name)
@@ -87,4 +69,22 @@ func (api *API) FindCommand(name string) ([]*Command, error) {
 		}
 	}
 	return list, err
+}
+
+func joinUrlFragments(base, path string) string {
+	if base == "" {
+		return path
+	}
+	if path == "" {
+		return base
+	}
+	b := base[len(base)-1] == '/'
+	p := path[0] == '/'
+	if !b && !p {
+		return base + "/" + path
+	}
+	if b && p {
+		return base + path[1:]
+	}
+	return base + path
 }

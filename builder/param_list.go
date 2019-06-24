@@ -1,6 +1,13 @@
 package builder
 
 func ListParams(cmd *Command) []string {
+	if cmd == nil {
+		panic("cmd == nil")
+	}
+	if cmd.API == nil {
+		panic("cmd.API == nil")
+	}
+
 	const paramNameIndex = 1
 	var list []string
 	unique := make(map[string]bool)
@@ -9,12 +16,6 @@ func ListParams(cmd *Command) []string {
 			unique[v] = true
 			list = append(list, v)
 		}
-	}
-	if cmd == nil {
-		panic("cmd == nil")
-	}
-	if cmd.API == nil {
-		panic("cmd.API == nil")
 	}
 
 	searchIn := []string{

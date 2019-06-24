@@ -1,7 +1,7 @@
 package capicomplete
 
 import (
-	"fmt"
+	"log"
 	"strings"
 
 	"github.com/NearlyUnique/capi/autocomplete"
@@ -46,14 +46,17 @@ func GenerateResponse(ac *autocomplete.Params, apis *builder.APISet) []string {
 		apiName := indexOrEmpty(ac.Args(), 0)
 		api, err := apis.FindAPI(apiName)
 		if err != nil {
-			return []string{"error", err.Error()}
+			log.Printf("FindAPI : %v", err)
+			return nil
 		}
 		if len(api) != 1 {
-			return []string{"error", fmt.Sprintf("API '%s' ambiguous", apiName)}
+			log.Printf("API name '%s' ambiguous, %d matches", apiName, len(api))
+			return nil
 		}
 		cmds, err := api[0].FindCommand(ac.Word)
 		if err != nil {
-			return []string{"error", err.Error()}
+			log.Printf("FindCommand for API['%s']: %v", apiName, err)
+			return nil
 		}
 		for _, cmd := range cmds {
 			if strings.HasPrefix(cmd.Name, ac.Word) {
@@ -70,18 +73,23 @@ func GenerateResponse(ac *autocomplete.Params, apis *builder.APISet) []string {
 		apiName := indexOrEmpty(ac.Args(), 0)
 		api, err := apis.FindAPI(apiName)
 		if err != nil {
-			return []string{"error", err.Error()}
+			log.Printf("FindAPI : %v", err)
+			return nil
 		}
 		if len(api) != 1 {
-			return []string{"error", fmt.Sprintf("API '%s' ambiguous", apiName)}
+			log.Printf("API '%s' ambiguous, %d matches", apiName, len(api))
+			return nil
 		}
 		cmdName := indexOrEmpty(ac.Args(), 1)
 		cmd, err := api[0].FindCommand(cmdName)
 		if err != nil {
-			return []string{"error", err.Error()}
+			log.Printf("FindCommand for API['%s']: %v", apiName, err)
+			return nil
 		}
 		if len(cmd) != 1 {
-			return []string{"error", fmt.Sprintf("command '%s' ambiguous", cmdName)}
+			log.Printf("command '%s' ambiguous, %d matches", cmdName, len(cmd))
+			return nil
+
 		}
 
 		for _, param := range builder.ListParams(cmd[0]) {

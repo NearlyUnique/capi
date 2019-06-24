@@ -40,10 +40,6 @@ func Test_auto_complete_data_is_generated(t *testing.T) {
 	})
 	t.Run("must have required env var", func(t *testing.T) {
 
-		autocomplete.LogHook = func(format string, args ...interface{}) {
-			//t.Log(fmt.Sprintf(format, args...))
-			//t.FailNow()
-		}
 		assert.NotNil(t, autocomplete.Parse(args, env))
 
 		remove := []string{"COMP_LINE", "COMP_TYPE", "COMP_KEY", "COMP_POINT"}
@@ -57,6 +53,17 @@ func Test_auto_complete_data_is_generated(t *testing.T) {
 		require.NotNil(t, ac)
 		assert.True(t, reflect.DeepEqual(&ExpAc, ac), "expected:%v\nactual: %v\n", ExpAc, ac)
 	})
+}
+
+func Test_all_const_values_are_used(t *testing.T) {
+	// these values are for interest and may be useful later
+	// it costs nothing to keep them ofr now and this test
+	// tells the linter no to complain about them
+	assert.Equal(t, '?', autocomplete.TypePartial)
+	assert.Equal(t, '!', autocomplete.TypeList)
+	assert.Equal(t, '@', autocomplete.TypeListUnmodified)
+	assert.Equal(t, '%', autocomplete.TypeMenu)
+	assert.Equal(t, 0, autocomplete.TypeNone)
 }
 
 func copyWithoutKey(src []string, key string) []string {

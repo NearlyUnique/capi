@@ -2,6 +2,7 @@ package autocomplete
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -50,7 +51,7 @@ func Parse(args []string, envRaw []string) *Params {
 
 	var ac Params
 	if len(args) != 4 {
-		log("expected 4 args, got %v", args)
+		log.Printf("expected 4 args, got %v", args)
 		return nil
 	}
 	env := sliceToMap(envRaw)
@@ -65,7 +66,7 @@ func Parse(args []string, envRaw []string) *Params {
 	ac.ParseCompPoint(env)
 
 	if ac.err != nil {
-		log(ac.err.Error())
+		log.Printf(ac.err.Error())
 		return nil
 	}
 
@@ -73,17 +74,14 @@ func Parse(args []string, envRaw []string) *Params {
 }
 
 func logArgs(args, envRaw []string) {
-	log("args:")
 	for i, v := range args {
-		log("%d:'%s',", i, v)
+		log.Printf("arg: %d:'%s',", i, v)
 	}
-	log("\nenv:")
 	for _, v := range envRaw {
 		if strings.HasPrefix(v, "COMP_") {
-			log("%s;", v)
+			log.Printf("env: %s;", v)
 		}
 	}
-	log("\n")
 }
 
 //WordIndex for the word under the cursor
@@ -125,15 +123,6 @@ func logicalPosition(line string, pos int) int {
 		}
 	}
 	return p
-}
-
-// LogHook allows callers to intercept the process
-var LogHook func(format string, args ...interface{})
-
-func log(format string, args ...interface{}) {
-	if LogHook != nil {
-		LogHook(format, args...)
-	}
 }
 
 func (p Params) String() string {

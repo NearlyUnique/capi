@@ -15,6 +15,7 @@ func main() {
 			"requests exactly 1 argument, the command line you want ti simulate for the complete command\n")
 		os.Exit(1)
 	}
+	autocomplete.EnableLogging(os.Stdout)
 	parts := strings.Split(os.Args[1], "|")
 	if len(parts) == 1 {
 		parts = append(parts, "")

@@ -1,6 +1,7 @@
 package capicomplete_test
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/NearlyUnique/capi/autocomplete"
@@ -60,19 +61,24 @@ func Test_searching_for_command_within_api(t *testing.T) {
 		assert.Contains(t, act, "cmd1")
 		assert.Contains(t, act, "cmd2")
 	})
-	t.Run("if the api does not exist an error is returned", func(t *testing.T) {
+	t.Run("if the api does not exist an error is logged", func(t *testing.T) {
 		ac := autocomplete.Mock("app-name no-such-api c", "")
+		var logFile bytes.Buffer
+		capicomplete.EnableLogging(&logFile)
+
 		act := capicomplete.GenerateResponse(&ac, &p)
 
-		assert.Equal(t, 2, len(act))
-		assert.Contains(t, act, "error")
+		assert.Equal(t, 0, len(act))
+		assert.Contains(t, logFile.String(), "no results")
 	})
 	t.Run("if the api search is ambiguous an error is returned", func(t *testing.T) {
 		ac := autocomplete.Mock("app-name any cmd1", "")
+		var logFile bytes.Buffer
+		capicomplete.EnableLogging(&logFile)
 		act := capicomplete.GenerateResponse(&ac, &p)
 
-		assert.Equal(t, 2, len(act))
-		assert.Contains(t, act, "error")
+		assert.Equal(t, 0, len(act))
+		assert.Contains(t, logFile.String(), "ambiguous")
 	})
 }
 
