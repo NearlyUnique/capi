@@ -3,6 +3,7 @@ package run
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -39,8 +40,9 @@ func Main(loader LoadLister, args []string, sources ...builder.SourceFn) error {
 	if err != nil {
 		return err
 	}
-	buf, err := json.Marshal(resp)
+	buf, err := json.MarshalIndent(Collate(resp), "", "  ")
 	if err != nil {
+		log.Printf("final marshal failed: %v", err)
 		buf, _ = httputil.DumpResponse(resp, true)
 	}
 	fmt.Print(string(buf))

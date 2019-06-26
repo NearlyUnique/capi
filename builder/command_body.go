@@ -39,3 +39,13 @@ func (s *StringOrList) UnmarshalJSON(data []byte) error {
 	*s = list
 	return err
 }
+
+func (s StringOrList) MarshalJSON() ([]byte, error) {
+	if s == nil {
+		return nil, nil
+	}
+	if len(s) == 1 {
+		return json.Marshal([]string(s)[0])
+	}
+	return json.Marshal([]string(s))
+}
