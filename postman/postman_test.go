@@ -148,15 +148,54 @@ func Test_postman_variables_are_converted_to_capi_variables(t *testing.T) {
 	assert.Equal(t, `["{attrib-value}"]`, string(command.Body.Data))
 }
 
-func Test_spaces_in_command_names_are_replaced_with_underscore(t *testing.T) {
+func Test_characters_in_command_names_are_replaced_with_underscore(t *testing.T) {
 	pm := ItemConfig{
-		Item: []Item{{
-			Name: "name with spaces",
-		}},
+		Item: []Item{
+			{Name: "name with spaces"},
+			{Name: "some(brackets)"},
+			{Name: "square[brackets]"},
+			{Name: "hash#"},
+			{Name: "slash\\/"},
+			{Name: `misc!'"£$%^&*,<>;:@`},
+		},
 	}
 	set, err := pm.ToAPISet()
 	require.NoError(t, err)
 
-	assert.Equal(t, "name_with_spaces", set.APIs[0].Commands[0].Name)
+	cmd := set.APIs[0].Commands
+	assert.Equal(t, "name_with_spaces", cmd[0].Name)
+	assert.Equal(t, "some_brackets_", cmd[1].Name)
+	assert.Equal(t, "square_brackets_", cmd[2].Name)
+	assert.Equal(t, "hash_", cmd[3].Name)
+	assert.Equal(t, "slash__", cmd[4].Name)
+	assert.Equal(t, `misc_______________`, cmd[5].Name)
+
+}
+
+func Test_postman_config_can_be_a_hierarchy(t *testing.T) {
+	pm := ItemConfig{
+		Info: Info{Name: "api-name"},
+		Item: []Item{
+			{
+				Name: "root",
+				Item: []Item{
+					{
+						Name: "sub cmd",
+						Item: []Item{{
+							Name:    "leaf cmd",
+							Request: Request{URL: URL{Raw: "https://example.com"}},
+						}},
+					},
+				},
+			},
+		},
+	}
+	set, err := pm.ToAPISet()
+
+	require.NoError(t, err)
+	require.NotEmpty(t, set.APIs, "no apis")
+	require.NotEmpty(t, set.APIs[0].Commands, "no commands")
+	assert.Equal(t, "root_sub_cmd_leaf_cmd", set.APIs[0].Commands[0].Name)
+	assert.Equal(t, "https://example.com", set.APIs[0].Commands[0].Path)
 
 }

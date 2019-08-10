@@ -22,7 +22,10 @@ func main() {
 	loader.RegisterFileExtension(postman.CollectionExtension, postman.FormatReader)
 
 	env := os.Environ()
-	if options := run.AutoComplete(loader, os.Args, env); len(options) > 0 {
+	if options, isTabComplete := run.AutoComplete(loader, os.Args, env); isTabComplete {
+		if len(options) == 0 {
+			log.Print("tab-complete: no options")
+		}
 		for _, opt := range options {
 			fmt.Println(opt)
 		}

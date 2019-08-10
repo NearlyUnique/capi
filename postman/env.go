@@ -84,7 +84,7 @@ func envFileToMap(buf []byte) (map[string]string, error) {
 }
 
 func resolveFilename(args, env []string) string {
-	const postmanEnv = "POSTMAN_ENV="
+	const postmanEnv = "CAPI_ENV="
 	for _, e := range env {
 		if strings.HasPrefix(e, postmanEnv) {
 			val := e[len(postmanEnv):]

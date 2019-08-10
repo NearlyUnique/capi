@@ -7,6 +7,14 @@
         "accept": ["application/json"],
         "user-agent": ["capi v/0.0"]
       },
+      "flags": {
+        "show-request": true,
+        "request-mask": ["username","password"],
+        "history-limit": 10,
+        "session": {
+          "access_token": "body.access_token"
+        }
+      },
       "commands": [
         {
           "name": "read",
@@ -24,6 +32,13 @@
             "object" : {"isObject": true},
             "with_replacement": "{attribute}"
           }
+        },
+        {
+          "name": "write-any",
+          "method": "POST",
+          "path": "/post",
+          "content-type": ["application/json"],
+          "body": "{body}"
         }
       ]
     }

@@ -74,6 +74,20 @@ func Test_find_command_in_api(t *testing.T) {
 		assert.Error(t, err)
 		assert.Empty(t, actual)
 	})
+	t.Run("names where bad characters have been automatically replaced with underscore", func(t *testing.T) {
+		set := builder.APISet{
+			APIs: []builder.API{
+				{Name: "not this one"},
+				{Name: "Any Space"},
+			},
+		}
+
+		actual, err := set.FindAPI("any_space")
+
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(actual))
+		assert.Equal(t, "Any Space", actual[0].Name)
+	})
 	t.Run("find_supports_case_insensitive_substring_match", func(t *testing.T) {
 		set := builder.APISet{APIs: []builder.API{{Name: "any",
 			Commands: []builder.Command{

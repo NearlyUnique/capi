@@ -47,7 +47,7 @@ func Test_tab_complete(t *testing.T) {
 			params.PrevWord,
 		}
 
-		options := run.AutoComplete(loader, args, []string{
+		options, ok := run.AutoComplete(loader, args, []string{
 			"COMP_LINE=" + params.Line,
 			"COMP_POINT=" + strconv.Itoa(params.Point),
 			"COMP_KEY=" + params.Key,
@@ -55,6 +55,7 @@ func Test_tab_complete(t *testing.T) {
 		})
 
 		require.Equal(t, 1, len(options))
+		assert.True(t, ok)
 		assert.Equal(t, "any-item", options[0])
 		assert.Equal(t, "partial-api", actualSearch)
 	})

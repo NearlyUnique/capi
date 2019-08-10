@@ -40,23 +40,25 @@ func Main(loader LoadLister, args []string, sources ...builder.SourceFn) error {
 	if err != nil {
 		return err
 	}
-	buf, err := json.MarshalIndent(Collate(resp), "", "  ")
+	response := Collate(resp)
+	buf, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
 		log.Printf("final marshal failed: %v", err)
 		buf, _ = httputil.DumpResponse(resp, true)
 	}
+
 	fmt.Print(string(buf))
 
 	return nil
 }
 
 // AutoComplete entry point
-func AutoComplete(loader LoadLister, args, env []string) []string {
+func AutoComplete(loader LoadLister, args, env []string) ([]string, bool) {
 	ac := autocomplete.Parse(args, env)
 
 	if ac == nil {
 		// ok, no complete work to perform
-		return nil
+		return nil, false
 	}
 	// args are from complete, replace with the actual args that would run
 	args = strings.Split(ac.Line, " ")
@@ -64,8 +66,9 @@ func AutoComplete(loader LoadLister, args, env []string) []string {
 	firstArg := indexOrEmpty(args, 1)
 	set, err := loader.Load(firstArg)
 	if err != nil {
-		return loader.List(firstArg)
+		log.Printf("load failed for complete: %v", err)
+		return loader.List(firstArg), true
 	}
 
-	return capicomplete.GenerateResponse(ac, set)
+	return capicomplete.GenerateResponse(ac, set), true
 }

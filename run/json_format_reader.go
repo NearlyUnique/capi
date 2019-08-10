@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	JSONFileExtension = ".json"
+	JSONFileExtension = ".capi.json"
 )
 
 func JSONFormatReader(content []byte) (*builder.APISet, error) {

@@ -25,7 +25,7 @@ func Test_load_postman_env_file_based_on_env_var(t *testing.T) {
 	t.Run("env file name only can be used", func(t *testing.T) {
 		postie := postman.NewSource(
 			[]string{"any"},
-			[]string{"POSTMAN_ENV=a-filename"},
+			[]string{"CAPI_ENV=a-filename"},
 			opener,
 			nil)
 
@@ -36,7 +36,7 @@ func Test_load_postman_env_file_based_on_env_var(t *testing.T) {
 	t.Run("full env file name can be used", func(t *testing.T) {
 		postie := postman.NewSource(
 			[]string{"any"},
-			[]string{"POSTMAN_ENV=a-filename" + postman.EnvironmentExtension},
+			[]string{"CAPI_ENV=a-filename" + postman.EnvironmentExtension},
 			opener,
 			nil)
 

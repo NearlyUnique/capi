@@ -2,6 +2,7 @@ package postman
 
 import (
 	"encoding/json"
+	"log"
 	"regexp"
 	"strings"
 
@@ -48,6 +49,7 @@ type (
 	Item struct {
 		Name    string
 		Request Request
+		Item    []Item
 		//Event []struct {
 		//	Listen string
 		//	Script struct {
@@ -82,9 +84,19 @@ func (c ItemConfig) ToAPISet() (*builder.APISet, error) {
 			{Name: c.Info.Name},
 		},
 	}
-	for _, i := range c.Item {
+	extractCommands(&set.APIs[0].Commands, c.Item, "")
+
+	return &set, nil
+}
+
+func extractCommands(cmds *[]builder.Command, list []Item, prefix string) {
+	for _, i := range list {
+		if len(i.Item) > 0 {
+			extractCommands(cmds, i.Item, builder.SafeName(prefix+i.Name+"_"))
+			continue
+		}
 		cmd := builder.Command{
-			Name:   strings.Replace(i.Name, " ", "_", -1),
+			Name:   builder.SafeName(prefix + i.Name),
 			Path:   convertToCapiParameters(strings.Split(i.Request.URL.Raw, "?")[0]),
 			Method: i.Request.Method,
 			Header: make(map[string]builder.StringOrList),
@@ -97,10 +109,13 @@ func (c ItemConfig) ToAPISet() (*builder.APISet, error) {
 			s := i.Request.Body.Raw
 			cmd.Body = &builder.CommandBody{Data: []byte(convertToCapiParameters(s))}
 		}
-		set.APIs[0].Commands = append(set.APIs[0].Commands, cmd)
+		for _, c := range *cmds {
+			if c.Name == cmd.Name {
+				log.Printf("already found %v", cmd.Name)
+			}
+		}
+		*cmds = append(*cmds, cmd)
 	}
-
-	return &set, nil
 }
 
 func postmanListToMap(item []Value, cmdMap map[string]builder.StringOrList) {

@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"regexp"
 	"strings"
 )
 
@@ -43,8 +44,8 @@ func (set *APISet) FindAPI(name string) ([]*API, error) {
 	} else {
 		lowerName := strings.ToLower(name)
 		for i := range set.APIs {
-			//todo: can we do this WITHOUT the extra allocation?
-			if strings.Contains(strings.ToLower(set.APIs[i].Name), lowerName) {
+			if strings.Contains(strings.ToLower(set.APIs[i].Name), lowerName) ||
+				strings.ToLower(SafeName(set.APIs[i].Name)) == lowerName {
 				api := &set.APIs[i]
 				api.Set = set
 				list = append(list, api)
@@ -61,7 +62,8 @@ func (api *API) FindCommand(name string) ([]*Command, error) {
 	lowerName := strings.ToLower(name)
 	for i := range api.Commands {
 		//todo: can we do this WITHOUT the extra allocation?
-		if strings.Contains(strings.ToLower(api.Commands[i].Name), lowerName) {
+		if strings.Contains(strings.ToLower(api.Commands[i].Name), lowerName) ||
+			strings.ToLower(SafeName(api.Commands[i].Name)) == lowerName {
 			cmd := &api.Commands[i]
 			cmd.API = api
 			list = append(list, cmd)
@@ -71,6 +73,21 @@ func (api *API) FindCommand(name string) ([]*Command, error) {
 	return list, err
 }
 
+func (api *API) FindCommandExact(name string) (*Command, error) {
+	list, err := api.FindCommand(name)
+	if err != nil {
+		return nil, err
+	}
+	if len(list) == 1 {
+		return list[0], nil
+	}
+	for _, c := range list {
+		if strings.EqualFold(c.Name, name) {
+			return c, nil
+		}
+	}
+	return nil, NotFound(name)
+}
 func joinUrlFragments(base, path string) string {
 	if base == "" {
 		return path
@@ -87,4 +104,10 @@ func joinUrlFragments(base, path string) string {
 		return base + path[1:]
 	}
 	return base + path
+}
+
+var rxSafeName = regexp.MustCompile(`[\s()\[\]#\\/!"£$%^&*,<>;:@']`)
+
+func SafeName(s string) string {
+	return rxSafeName.ReplaceAllString(s, "_")
 }
